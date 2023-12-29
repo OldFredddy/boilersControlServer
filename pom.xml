@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.boilersserver</groupId>
 	<artifactId>BoilersControlServer</artifactId>
-	<version>0.0.3</version>
+	<version>0.0.4</version>
 	<name>BoilersControlServer</name>
 	<description>Web service</description>
 	<properties>
@@ -84,7 +84,7 @@
 		<dependency>
 			<groupId>org.telegram</groupId>
 			<artifactId>telegrambots</artifactId>
-			<version>6.5.0</version>
+			<version>6.8.0</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/com.infiniteautomation/modbus4j -->
 		<dependency>

@@ -9,10 +9,10 @@ import java.util.List;
 
 public class Messages {
 
-    public static SendMessage chooseBoilerKeyboard(String chatId) {
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId);
-        message.setText("Выберите котельную:");
+    public static InlineKeyboardMarkup chooseBoilerKeyboardMarkup() {
+        // SendMessage message = new SendMessage();
+        // message.setChatId(chatId);
+        // message.setText("Выберите котельную:");
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
         List<InlineKeyboardButton> buttonList0 = new ArrayList<>(); List<InlineKeyboardButton> buttonList1 = new ArrayList<>(); List<InlineKeyboardButton> buttonList2 = new ArrayList<>();
@@ -39,8 +39,8 @@ public class Messages {
         rowList.add(buttonList0); rowList.add(buttonList1);rowList.add(buttonList2); rowList.add(buttonList3);
         rowList.add(buttonList7); rowList.add(buttonList9);rowList.add(buttonList10); rowList.add(buttonList11);
         inlineKeyboardMarkup.setKeyboard(rowList);
-        message.setReplyMarkup(inlineKeyboardMarkup);
-        return message;
+     //   message.setReplyMarkup(inlineKeyboardMarkup);
+        return inlineKeyboardMarkup;
     }
 
     public static SendMessage startKeyboard(String chatId) {
@@ -83,10 +83,10 @@ public class Messages {
         message.setReplyMarkup(inlineKeyboardMarkup);
         return message;
     }
-    public static SendMessage controlKeyboard(String chatId) {
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId);
-        message.setText("Выберите действие:");
+    public static InlineKeyboardMarkup controlKeyboardMarkup() {
+      //  SendMessage message = new SendMessage();
+      //  message.setChatId(chatId);
+      //  message.setText("Выберите действие:");
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
         List<InlineKeyboardButton> buttonList2 = new ArrayList<>();
@@ -108,12 +108,18 @@ public class Messages {
         buttonList3.add(disableCallServiceButton);
         buttonList4.add(increaseTpodButton);
         buttonList4.add(decreaseTpodButton);
+        List<InlineKeyboardButton> backButtonRow = new ArrayList<>();
+        InlineKeyboardButton backButton = new InlineKeyboardButton();
+        backButton.setText("↩️Назад");
+        backButton.setCallbackData("goBack");
+        backButtonRow.add(backButton);
         rowList.add(buttonList2);
         rowList.add(buttonList3);
         rowList.add(buttonList4);
+        rowList.add(backButtonRow);
         inlineKeyboardMarkup.setKeyboard(rowList);
-        message.setReplyMarkup(inlineKeyboardMarkup);
-        return message;
+        // message.setReplyMarkup(inlineKeyboardMarkup);
+        return inlineKeyboardMarkup;
     }
     public static SendMessage backKeyboard(String chatId) {
         SendMessage message = new SendMessage();

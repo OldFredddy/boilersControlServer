@@ -9,8 +9,10 @@ import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import java.time.LocalTime;
@@ -323,6 +325,10 @@ public class TelegramService extends TelegramLongPollingBot {
 
         }
         if (update.hasCallbackQuery()){
+            CallbackQuery callbackQuery = update.getCallbackQuery();
+            String callData = callbackQuery.getData();
+            long messageId = callbackQuery.getMessage().getMessageId();
+            long chatId = callbackQuery.getMessage().getChatId();
             if (update.getCallbackQuery().getData().equals("avaryReset")){
                 for (int i = 0; i < errorsArray.length; i++) {
                     errorsArray[i]=false;
@@ -398,26 +404,66 @@ public class TelegramService extends TelegramLongPollingBot {
                     }
                     enableCallService = false;
             }
-            if (update.getCallbackQuery().getData().equals("bControl")){
-                    try {
-                        Message message2 = execute(Messages.chooseBoilerKeyboard(update.getCallbackQuery().getMessage().getChatId().toString()));
-                        Thread.sleep(2000);
-                    } catch (TelegramApiException | InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                    enableCallService=false;
+            if (callData.equals("bControl")) {
+                InlineKeyboardMarkup markupInline = Messages.chooseBoilerKeyboardMarkup(); // Предполагаем, что этот метод возвращает InlineKeyboardMarkup
+
+                EditMessageText newMessage = new EditMessageText(
+                        String.valueOf(chatId),   // chatId приводим к строке
+                        (int) messageId,                // messageId уже в правильном формате
+                        null,                     // inlineMessageId не используется в этом случае
+                        "Выберите котельную", // новый текст
+                        null,                     // parseMode, если нужен, например, "Markdown"
+                        null,                     // disableWebPagePreview
+                        markupInline,             // новая клавиатура
+                        null                      // entities, если нужны
+                );
+
+                try {
+                    execute(newMessage);
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
             }
             if (update.getCallbackQuery().getData().contains("boiler")){
                 try {
                     boilerControlNum=extractBoilerControlNum(update.getCallbackQuery().getData());
-                    for (int i = 0; i < clientsId.size(); i++) {
-                        Message message2 = execute(Messages.controlKeyboard(String.valueOf(clientsId.get(i))));
-                        Thread.sleep(SLEEP_TIME);
-                    }
-                } catch (TelegramApiException | InterruptedException e) {
+                    InlineKeyboardMarkup controlMarkup = Messages.controlKeyboardMarkup(); // Предполагаем, что этот метод возвращает InlineKeyboardMarkup
+
+                    EditMessageText newMessage = new EditMessageText(
+                            String.valueOf(chatId),   // chatId приводим к строке
+                            (int) messageId,                // messageId уже в правильном формате
+                            null,                     // inlineMessageId не используется в этом случае
+                            boilerNames[boilerControlNum], // новый текст
+                            null,                     // parseMode, если нужен, например, "Markdown"
+                            null,                     // disableWebPagePreview
+                            controlMarkup,             // новая клавиатура
+                            null                      // entities, если нужны
+                    );
+                    execute(newMessage);
+                } catch (TelegramApiException e) {
                     throw new RuntimeException(e);
                 }
                 enableCallService=false;
+            }
+            if (callData.equals("goBack")) {
+                InlineKeyboardMarkup markupInline = Messages.chooseBoilerKeyboardMarkup(); // Предполагаем, что этот метод возвращает InlineKeyboardMarkup
+
+                EditMessageText newMessage = new EditMessageText(
+                        String.valueOf(chatId),   // chatId приводим к строке
+                        (int) messageId,                // messageId уже в правильном формате
+                        null,                     // inlineMessageId не используется в этом случае
+                        "Выберите котельную", // новый текст
+                        null,                     // parseMode, если нужен, например, "Markdown"
+                        null,                     // disableWebPagePreview
+                        markupInline,             // новая клавиатура
+                        null                      // entities, если нужны
+                );
+
+                try {
+                    execute(newMessage);
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
