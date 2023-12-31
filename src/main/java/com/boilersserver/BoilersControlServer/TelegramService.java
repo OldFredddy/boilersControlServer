@@ -18,6 +18,7 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 @Component
@@ -26,8 +27,6 @@ public class TelegramService extends TelegramLongPollingBot {
     public TelegramService(BoilersDataService boilersDataService, Tokens tokens)  {
         this.boilersDataService = boilersDataService;
         this.tokens = tokens;
-    }
-    public void initialize() {
     }
     @PostConstruct
     public void init() {
@@ -40,6 +39,9 @@ public class TelegramService extends TelegramLongPollingBot {
         }
         clientsId.add(1102774002L);
         clientsId.add(6290939545L);
+        for (AtomicBoolean atomicBoolean : flagSilentReset) {
+            atomicBoolean.set(true);
+        }
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId("@BoilersAnadyr");
         sendMessage.setText(getCurrentParamsText(errorsArray));
@@ -79,6 +81,9 @@ public class TelegramService extends TelegramLongPollingBot {
                 } catch (TelegramApiException | InterruptedException e) {
 
                 }
+                for (int i = 0; i < errorsArray.length; i++) {
+                    trySilentReset(i);
+                }
             }
         }, 5 * 60 * 1000, 5 * 60 * 1000);
     }
@@ -97,6 +102,7 @@ public class TelegramService extends TelegramLongPollingBot {
         monitorThread2=null;
         System.gc();
     }
+    AtomicBoolean[] flagSilentReset = new AtomicBoolean[14];
     static volatile boolean keepRunning = true;
     static volatile int boilerControlNum = -1;
     private final boolean[] secondAttempt={false,false,false,false,false,false,false,false,false,false,false,false,false,false};
@@ -122,14 +128,13 @@ public class TelegramService extends TelegramLongPollingBot {
     private volatile boolean enableCallService=false;
  public volatile String[] correctForScada = {"0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"};
  public volatile String[] correctFromUsers = {"0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"};
-    public float[] normalPvxHigh={0.5f, 0.5f, 0.5f, 0.5f, 0.35f, 6.0f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f,0.5f, 0.4f};
+    public float[] normalPvxHigh={0.5f, 0.5f, 0.5f, 0.5f, 0.35f, 6.0f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f,0.5f, 0.53f};
     public float[] normalPvxLow= {0.32f, 0.32f, 0.23f, 0.29f, 0.12f, 1.0f, 0.02f, 0.32f, 0.30f, 0.32f, 0.32f, 0.32f, 0.02f, 0.22f};
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
     private Integer[] avaryMessageID=new Integer[2];
     private Timer timer = new Timer();
     Integer[] avary2MessageID= new Integer[2];
     Integer[] avary3MessageID=new Integer[2];
-    private long chatId = -1;
     public boolean [] errorsArray = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};
     static volatile Integer messageId = -1;
     List<Long> clientsId = new ArrayList<>();
@@ -270,7 +275,7 @@ public class TelegramService extends TelegramLongPollingBot {
            ZvonokPostService.call("+79145353244");
        }
         for (int i = 0; i < clientsId.size() ; i++) {
-            if (secondAttempt[boilerIndex]) {
+            if (secondAttempt[boilerIndex]&&flagSilentReset[boilerIndex].get()) {
                 SendMessage message1 = new SendMessage();
                 message1.setChatId(clientsId.get(i));      // чат id
                 message1.setText(boilerNames[boilerIndex] + "\n" + "Аварийное значение!" + " Общие параметры на момент аварии:" + "\n"
@@ -288,8 +293,19 @@ public class TelegramService extends TelegramLongPollingBot {
                }
                checkForAvary=true;
                secondAttempt[boilerIndex]=true;
+           } else {
+               flagSilentReset[boilerIndex].set(true);
            }
+
         }
+    }
+
+    private void trySilentReset(int boilerIndex) {
+            if (errorsArray[boilerIndex]) {
+                errorsArray[boilerIndex] = false;
+                flagSilentReset[boilerIndex].set(false);
+                System.out.println("Ошибка котельной с индексом " + boilerIndex + " была успешно сброшена в тихом режиме.");
+            }
     }
     @Override
     public void onUpdateReceived(Update update) {
@@ -405,17 +421,17 @@ public class TelegramService extends TelegramLongPollingBot {
                     enableCallService = false;
             }
             if (callData.equals("bControl")) {
-                InlineKeyboardMarkup markupInline = Messages.chooseBoilerKeyboardMarkup(); // Предполагаем, что этот метод возвращает InlineKeyboardMarkup
+                InlineKeyboardMarkup markupInline = Messages.chooseBoilerKeyboardMarkup(); 
 
                 EditMessageText newMessage = new EditMessageText(
-                        String.valueOf(chatId),   // chatId приводим к строке
-                        (int) messageId,                // messageId уже в правильном формате
-                        null,                     // inlineMessageId не используется в этом случае
-                        "Выберите котельную", // новый текст
-                        null,                     // parseMode, если нужен, например, "Markdown"
-                        null,                     // disableWebPagePreview
-                        markupInline,             // новая клавиатура
-                        null                      // entities, если нужны
+                        String.valueOf(chatId),
+                        (int) messageId,
+                        null,
+                        "Выберите котельную",
+                        null,
+                        null,
+                        markupInline,
+                        null
                 );
 
                 try {
@@ -427,17 +443,17 @@ public class TelegramService extends TelegramLongPollingBot {
             if (update.getCallbackQuery().getData().contains("boiler")){
                 try {
                     boilerControlNum=extractBoilerControlNum(update.getCallbackQuery().getData());
-                    InlineKeyboardMarkup controlMarkup = Messages.controlKeyboardMarkup(); // Предполагаем, что этот метод возвращает InlineKeyboardMarkup
+                    InlineKeyboardMarkup controlMarkup = Messages.controlKeyboardMarkup();
 
                     EditMessageText newMessage = new EditMessageText(
-                            String.valueOf(chatId),   // chatId приводим к строке
-                            (int) messageId,                // messageId уже в правильном формате
-                            null,                     // inlineMessageId не используется в этом случае
-                            boilerNames[boilerControlNum], // новый текст
-                            null,                     // parseMode, если нужен, например, "Markdown"
-                            null,                     // disableWebPagePreview
-                            controlMarkup,             // новая клавиатура
-                            null                      // entities, если нужны
+                            String.valueOf(chatId),
+                            (int) messageId,
+                            null,
+                            boilerNames[boilerControlNum],
+                            null,
+                            null,
+                            controlMarkup,
+                            null
                     );
                     execute(newMessage);
                 } catch (TelegramApiException e) {
@@ -446,19 +462,18 @@ public class TelegramService extends TelegramLongPollingBot {
                 enableCallService=false;
             }
             if (callData.equals("goBack")) {
-                InlineKeyboardMarkup markupInline = Messages.chooseBoilerKeyboardMarkup(); // Предполагаем, что этот метод возвращает InlineKeyboardMarkup
+                InlineKeyboardMarkup markupInline = Messages.chooseBoilerKeyboardMarkup();
 
                 EditMessageText newMessage = new EditMessageText(
-                        String.valueOf(chatId),   // chatId приводим к строке
-                        (int) messageId,                // messageId уже в правильном формате
-                        null,                     // inlineMessageId не используется в этом случае
-                        "Выберите котельную", // новый текст
-                        null,                     // parseMode, если нужен, например, "Markdown"
-                        null,                     // disableWebPagePreview
-                        markupInline,             // новая клавиатура
-                        null                      // entities, если нужны
+                        String.valueOf(chatId),
+                        (int) messageId,
+                        null,
+                        "Выберите котельную",
+                        null,
+                        null,
+                        markupInline,
+                        null
                 );
-
                 try {
                     execute(newMessage);
                 } catch (TelegramApiException e) {
@@ -468,7 +483,7 @@ public class TelegramService extends TelegramLongPollingBot {
         }
     }
 
-    int numErrBoiler=0;
+    int numErrBoiler = 0;
     public boolean arraysEquals(String[] a1, String[] a2, String[] a3){
         boolean allEquals=true;
         for (int i = 0; i < a1.length; i++) {
@@ -487,15 +502,12 @@ public class TelegramService extends TelegramLongPollingBot {
             return 2; // для избегания ошибок
         }
     }
-    public void resetAvary(){
+    public void resetError(){
         for (int i = 0; i < errorsArray.length; i++) {
             errorsArray[i]=false;
             secondAttempt[i]=false;
         }
         checkForAvary=true;
-    }
-    public void setAvary(int numberOfAvaryBoiler){
-        errorsArray[numberOfAvaryBoiler]=true;
     }
 
 }

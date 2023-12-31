@@ -61,7 +61,7 @@ public class RESTController {
             for (int i = 0; i <boilersDataService.getBoilers().size() ; i++) {
                 boilersDataService.getBoilers().get(i).setIsOk(1,boilersDataService.getBoilers().get(i).getVersion()+1);//0-waiting 1 - good 2 - error
             }
-            telegramService.resetAvary();
+            telegramService.resetError();
             return "Success";
         } catch (Exception e) {
             return "Error: " + e.getMessage();

@@ -5,7 +5,6 @@ import java.util.LinkedList;
 
 public class TemperatureMonitor {
     private static final int BOILER_MAKATROVYH=-6;
-   // int[] boilerCompTable={0, 1, 2, 3, 7, 9, 10, 11};//TODO пока попробуем без неё, может потребовать изменения логики на SCADA
 
     public boolean isTemperatureAnomaly(String currentTemp, String tStreet,int numberOfBoiler, String fixedTpod,
                                         String correctTplan, String correctFromUsers) {
@@ -18,7 +17,7 @@ public class TemperatureMonitor {
             tPlan= Integer.parseInt(fixedTpod);
         }
         if (numberOfBoiler == 8){
-            LocalTime currentTime = LocalTime.now(); //TODO настроить время на линуксе на +9 МСК
+            LocalTime currentTime = LocalTime.now();
             LocalTime start = LocalTime.of(22, 20);
             LocalTime end = LocalTime.of(7, 40);
             if (currentTime.isAfter(start) && currentTime.isBefore(end)) {
