@@ -28,6 +28,7 @@ public class TelegramService extends TelegramLongPollingBot {
         this.boilersDataService = boilersDataService;
         this.tokens = tokens;
     }
+    AtomicBoolean[] flagSilentReset = new AtomicBoolean[14];
     @PostConstruct
     public void init() {
         try {
@@ -39,8 +40,8 @@ public class TelegramService extends TelegramLongPollingBot {
         }
         clientsId.add(1102774002L);
         clientsId.add(6290939545L);
-        for (AtomicBoolean atomicBoolean : flagSilentReset) {
-            atomicBoolean.set(true);
+        for (int i = 0; i < flagSilentReset.length; i++) {
+            flagSilentReset[i] = new AtomicBoolean(true);
         }
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId("@BoilersAnadyr");
@@ -102,7 +103,7 @@ public class TelegramService extends TelegramLongPollingBot {
         monitorThread2=null;
         System.gc();
     }
-    AtomicBoolean[] flagSilentReset = new AtomicBoolean[14];
+
     static volatile boolean keepRunning = true;
     static volatile int boilerControlNum = -1;
     private final boolean[] secondAttempt={false,false,false,false,false,false,false,false,false,false,false,false,false,false};
@@ -421,8 +422,7 @@ public class TelegramService extends TelegramLongPollingBot {
                     enableCallService = false;
             }
             if (callData.equals("bControl")) {
-                InlineKeyboardMarkup markupInline = Messages.chooseBoilerKeyboardMarkup(); 
-
+                InlineKeyboardMarkup markupInline = Messages.chooseBoilerKeyboardMarkup();
                 EditMessageText newMessage = new EditMessageText(
                         String.valueOf(chatId),
                         (int) messageId,
