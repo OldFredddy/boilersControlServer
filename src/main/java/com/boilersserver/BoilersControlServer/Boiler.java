@@ -21,6 +21,7 @@ public class Boiler {
     @Setter private String tPodFixed;
     @Setter private Integer id;
     @Setter private long version;
+    @Setter private long lastUpdated;
     public void setIsOk(int isOk, long newVersion) {
         if (newVersion > this.version) {
             this.isOk = isOk;

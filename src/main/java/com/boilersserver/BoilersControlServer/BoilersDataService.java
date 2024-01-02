@@ -1,15 +1,20 @@
 package com.boilersserver.BoilersControlServer;
 
 import com.google.gson.Gson;
+import jakarta.annotation.PreDestroy;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.resources.ConnectionProvider;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -23,6 +28,8 @@ public class BoilersDataService {
     private TemperatureCorrections corrections = new TemperatureCorrections();
     private final int BOILERS_COUNT = 14;
     private final WebClient webClient;
+    private final HttpClient httpClient;
+    private final ConnectionProvider connectionProvider;
     private final AtomicBoolean isUpdateInProgress = new AtomicBoolean(false);
     private final AtomicBoolean isUpdateInProgress2 = new AtomicBoolean(false);
     private static final String IP = "http://85.175.232.186:4567";//85.175.232.186
@@ -42,9 +49,24 @@ public class BoilersDataService {
             boiler.setTPodFixed("-1");
             boilers.add(boiler);
         }
-        webClient = webClientBuilder.baseUrl(IP).build();;
-    }
+        connectionProvider = ConnectionProvider.builder("custom")
+                .maxConnections(500)
+                .maxIdleTime(Duration.ofMinutes(30))
+                .maxLifeTime(Duration.ofHours(1))
+                .build();
 
+        this.httpClient = HttpClient.create(connectionProvider);
+        this.webClient = WebClient.builder()
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .baseUrl(IP)
+                .build();
+        // webClient = webClientBuilder.baseUrl(IP).build();;
+    }
+    @PreDestroy
+    public void onDestroy() {
+        this.connectionProvider.dispose();
+        System.out.println("clean BoilersDataService");
+    }
     @Scheduled(fixedRate = 3000)
     public void fetchBoilerData() {
         if (isUpdateInProgress.compareAndSet(false, true)) {

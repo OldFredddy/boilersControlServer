@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Messages {
-
     public static InlineKeyboardMarkup chooseBoilerKeyboardMarkup() {
         // SendMessage message = new SendMessage();
         // message.setChatId(chatId);
@@ -92,6 +91,7 @@ public class Messages {
         List<InlineKeyboardButton> buttonList2 = new ArrayList<>();
         List<InlineKeyboardButton> buttonList3 = new ArrayList<>();
         List<InlineKeyboardButton> buttonList4 = new ArrayList<>();
+        List<InlineKeyboardButton> buttonList5 = new ArrayList<>();
         InlineKeyboardButton enableCallServiceButton = new InlineKeyboardButton();
         enableCallServiceButton.setText("Включить звонки");
         enableCallServiceButton.setCallbackData("enableCallService");
@@ -104,10 +104,14 @@ public class Messages {
         InlineKeyboardButton decreaseTpodButton = new InlineKeyboardButton();
         decreaseTpodButton.setText("-3°C");
         decreaseTpodButton.setCallbackData("decreaseTpod");
+        InlineKeyboardButton showGraphics = new InlineKeyboardButton();
+        showGraphics.setText("\uD83D\uDCC8Статистика");
+        showGraphics.setCallbackData("graphicsButton");
         buttonList2.add(enableCallServiceButton);
         buttonList3.add(disableCallServiceButton);
         buttonList4.add(increaseTpodButton);
         buttonList4.add(decreaseTpodButton);
+        buttonList5.add(showGraphics);
         List<InlineKeyboardButton> backButtonRow = new ArrayList<>();
         InlineKeyboardButton backButton = new InlineKeyboardButton();
         backButton.setText("↩️Назад");
@@ -116,6 +120,38 @@ public class Messages {
         rowList.add(buttonList2);
         rowList.add(buttonList3);
         rowList.add(buttonList4);
+        rowList.add(buttonList5);
+        rowList.add(backButtonRow);
+        inlineKeyboardMarkup.setKeyboard(rowList);
+        // message.setReplyMarkup(inlineKeyboardMarkup);
+        return inlineKeyboardMarkup;
+    }
+    public static InlineKeyboardMarkup graphicsKeyboard() {
+        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
+        List<InlineKeyboardButton> buttonList1 = new ArrayList<>();
+        List<InlineKeyboardButton> buttonList2 = new ArrayList<>();
+        List<InlineKeyboardButton> buttonList3 = new ArrayList<>();
+        InlineKeyboardButton getTpodButton = new InlineKeyboardButton();
+        getTpodButton.setText("\uD83C\uDF21\uFE0FТемпература подачи");
+        getTpodButton.setCallbackData("getTpodGraphic");
+        InlineKeyboardButton getPpodButton = new InlineKeyboardButton();
+        getPpodButton.setText("\uD83C\uDF9B\uFE0FДавление на подаче");
+        getPpodButton.setCallbackData("getPpodGraphic");
+        InlineKeyboardButton getTulicaButton = new InlineKeyboardButton();
+        getTulicaButton.setText("❄️Темепратура улицы");
+        getTulicaButton.setCallbackData("getTulicaGraphic");
+        buttonList1.add(getTpodButton);
+        buttonList2.add(getPpodButton);
+        buttonList3.add(getTulicaButton);
+        List<InlineKeyboardButton> backButtonRow = new ArrayList<>();
+        InlineKeyboardButton backButton = new InlineKeyboardButton();
+        backButton.setText("↩️Назад");
+        backButton.setCallbackData("goBackToControl");
+        backButtonRow.add(backButton);
+        rowList.add(buttonList1);
+        rowList.add(buttonList2);
+        rowList.add(buttonList3);
         rowList.add(backButtonRow);
         inlineKeyboardMarkup.setKeyboard(rowList);
         // message.setReplyMarkup(inlineKeyboardMarkup);

@@ -2,31 +2,42 @@ package com.boilersserver.BoilersControlServer;
 
 
 import jakarta.annotation.PostConstruct;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.RenderedImage;
+import java.io.File;
+import java.io.IOException;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 @Component
 public class TelegramService extends TelegramLongPollingBot {
     @Autowired
-    public TelegramService(BoilersDataService boilersDataService, Tokens tokens)  {
+    public TelegramService(BoilersDataService boilersDataService, Tokens tokens, Graphics graphics)  {
         this.boilersDataService = boilersDataService;
         this.tokens = tokens;
+        this.graphics=graphics;
     }
     AtomicBoolean[] flagSilentReset = new AtomicBoolean[14];
     @PostConstruct
@@ -38,6 +49,11 @@ public class TelegramService extends TelegramLongPollingBot {
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+           keepRunning=false;
+           timer.cancel();
+            System.out.println("ShutdownHook executed");
+        }));
         clientsId.add(1102774002L);
         clientsId.add(6290939545L);
         for (int i = 0; i < flagSilentReset.length; i++) {
@@ -103,7 +119,7 @@ public class TelegramService extends TelegramLongPollingBot {
         monitorThread2=null;
         System.gc();
     }
-
+    Graphics graphics;
     static volatile boolean keepRunning = true;
     static volatile int boilerControlNum = -1;
     private final boolean[] secondAttempt={false,false,false,false,false,false,false,false,false,false,false,false,false,false};
@@ -308,6 +324,7 @@ public class TelegramService extends TelegramLongPollingBot {
                 System.out.println("Ошибка котельной с индексом " + boilerIndex + " была успешно сброшена в тихом режиме.");
             }
     }
+    @SneakyThrows
     @Override
     public void onUpdateReceived(Update update) {
 
@@ -445,6 +462,92 @@ public class TelegramService extends TelegramLongPollingBot {
                     boilerControlNum=extractBoilerControlNum(update.getCallbackQuery().getData());
                     InlineKeyboardMarkup controlMarkup = Messages.controlKeyboardMarkup();
 
+                    EditMessageText newMessage = new EditMessageText(
+                            String.valueOf(chatId),
+                            (int) messageId,
+                            null,
+                            boilerNames[boilerControlNum],
+                            null,
+                            null,
+                            controlMarkup,
+                            null
+                    );
+                    execute(newMessage);
+                } catch (TelegramApiException e) {
+                    throw new RuntimeException(e);
+                }
+                enableCallService=false;
+            }
+            if (callData.equals("getTpodGraphic") || callData.equals("getPpodGraphic") || callData.equals("getTulicaGraphic")){
+                Image image = null;
+                EditMessageText newMessage = new EditMessageText(
+                        String.valueOf(chatId),
+                        (int) messageId,
+                        null,
+                        " ⏳ Загрузка...",
+                        null,
+                        null,
+                        null,
+                        null
+                );
+                execute(newMessage);
+                switch (callData) {
+                    case "getTpodGraphic":
+                        image = graphics.getGraphics(graphics.getSortedTpodList(String.valueOf(boilerControlNum)));
+                        break;
+                    case "getPpodGraphic":
+                        image = graphics.getGraphics(graphics.getSortedpPodList(String.valueOf(boilerControlNum)));
+                        break;
+                    case "getTulicaGraphic":
+                        image = graphics.getGraphics(graphics.getSortedTulicaList(String.valueOf(boilerControlNum)));
+                        break;
+                }
+                if (image != null) {
+                    try {
+                        File outputFile = new File("graph.jpeg");
+                        ImageIO.write((RenderedImage) image, "jpeg", outputFile);
+                        SendPhoto sendPhotoRequest = new SendPhoto();
+                        sendPhotoRequest.setChatId(update.getCallbackQuery().getMessage().getChatId().toString());
+                        sendPhotoRequest.setPhoto(new InputFile(outputFile));
+                        String caption = graphics.getCaption(callData);
+                        sendPhotoRequest.setCaption(boilerNames[boilerControlNum]+"\n"+caption);
+                        try {
+                            DeleteMessage deleteMessage = new DeleteMessage();
+                            deleteMessage.setChatId(String.valueOf(update.getCallbackQuery().getMessage().getChatId()));
+                            deleteMessage.setMessageId((int) messageId);
+                            execute(deleteMessage);
+                            execute(sendPhotoRequest);
+                            outputFile.delete();
+                            execute(Messages.startKeyboard(String.valueOf(update.getCallbackQuery().getMessage().getChatId())));
+                        } catch (TelegramApiException e) {
+                            e.printStackTrace();
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            if (callData.equals("graphicsButton")){
+                try {
+                    InlineKeyboardMarkup graphicsMarkup = Messages.graphicsKeyboard();
+                    EditMessageText newMessage = new EditMessageText(
+                            String.valueOf(chatId),
+                            (int) messageId,
+                            null,
+                            boilerNames[boilerControlNum],
+                            null,
+                            null,
+                            graphicsMarkup,
+                            null
+                    );
+                    execute(newMessage);
+                } catch (TelegramApiException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            if (callData.equals("goBackToControl")){
+                try {
+                    InlineKeyboardMarkup controlMarkup = Messages.controlKeyboardMarkup();
                     EditMessageText newMessage = new EditMessageText(
                             String.valueOf(chatId),
                             (int) messageId,
