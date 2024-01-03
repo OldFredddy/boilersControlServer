@@ -188,8 +188,8 @@ public class TelegramService extends TelegramLongPollingBot {
                         if ((temperatureMonitor.isTemperatureAnomaly(boilersDataService.getBoilers().get(i).getTPod(),boilersDataService.getBoilers().get(i).getTUlica(),
                                 i,boilersDataService.getBoilers().get(i).getTPodFixed(),boilersDataService.getCorrections().getCorrectionTpod()[i],
                                 boilersDataService.getCorrections().getTAlarmCorrectionFromUsers()[i]))&&(!boilersDataService.getBoilers().get(i).getPPod().equals(INVALID_VALUE))) {
-                                sendAttention(i, "Проблема в температуре подачи!\n"+"Верхний предел: "+temperatureMonitor.getHighLimit()+
-                                        "\nНижний предел:"+temperatureMonitor.getLowLimit());
+                                sendAttention(i, "Проблема в температуре подачи!\n"+"Верхний предел: "+temperatureMonitor.getHighLimit()+" °C"+
+                                        "\nНижний предел: "+temperatureMonitor.getLowLimit()+" °C");
                                 Thread.sleep(SLEEP_TIME);
                         }
                     if (boilersDataService.getBoilers().get(i).getPPodLowFixed().equals("-1.0")||boilersDataService.getBoilers().get(i).getPPodHighFixed().equals("-1.0")){
@@ -260,9 +260,8 @@ public class TelegramService extends TelegramLongPollingBot {
         maxLengths[1] = Arrays.stream(data[0]).filter(Objects::nonNull).mapToInt(String::length).max().orElse(0);
         maxLengths[2] = Arrays.stream(data[1]).filter(Objects::nonNull).mapToInt(String::length).max().orElse(0);
         maxLengths[3] = Arrays.stream(data[2]).filter(Objects::nonNull).mapToInt(String::length).max().orElse(0);
-        maxLengths[4] = 1;  // Длина эмодзи
-        int maxWidth = 25; // Максимальная ширина столбца
-        // Проверяем, не превышает ли ширина столбца максимальное значение, и если превышает, устанавливаем максимальную ширину
+        maxLengths[4] = 1;
+        int maxWidth = 25;
         for (int i = 0; i < maxLengths.length; i++) {
             maxLengths[i] = Math.min(maxLengths[i], maxWidth);
         }
@@ -306,9 +305,11 @@ public class TelegramService extends TelegramLongPollingBot {
             }
            if (!secondAttempt[boilerIndex]){
                Thread.sleep(LONG_LONG_SLEEP_TIME);
-               for (int j = 0; j < errorsArray.length; j++) {
-                   errorsArray[j]=false;
+               errorsArray[boilerIndex]=false;
+               if (errorsArray[boilerIndex]=true){
+                   boilersDataService.getBoilers().get(boilerIndex).setIsOk(1,boilersDataService.getBoilers().get(boilerIndex).getVersion()+1);
                }
+               System.out.println("Вторая попытка сбросить ошибку на boiler№ "+boilerIndex);
                checkForAvary=true;
                secondAttempt[boilerIndex]=true;
            } else {
@@ -322,13 +323,13 @@ public class TelegramService extends TelegramLongPollingBot {
             if (errorsArray[boilerIndex]) {
                 errorsArray[boilerIndex] = false;
                 flagSilentReset[boilerIndex].set(false);
+                boilersDataService.getBoilers().get(boilerIndex).setIsOk(1,boilersDataService.getBoilers().get(boilerIndex).getVersion()+1);
                 System.out.println("Ошибка котельной с индексом " + boilerIndex + " была успешно сброшена в тихом режиме.");
             }
     }
     @SneakyThrows
     @Override
     public void onUpdateReceived(Update update) {
-
         Map<String, Integer> boilerIndices = new HashMap<>();
         for (int i = 0; i < boilersDataService.getBoilers().size(); i++) {
             boilerIndices.put(String.format("boiler%d", i), i);
