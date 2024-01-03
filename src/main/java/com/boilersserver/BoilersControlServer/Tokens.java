@@ -11,7 +11,6 @@ public class Tokens {
     @Value("${key2}")
     private String key2;
 
-    // Геттеры
     public String getKey1() {
         return key1;
     }
@@ -20,5 +19,4 @@ public class Tokens {
         return key2;
     }
 
-    // Другие методы
 }

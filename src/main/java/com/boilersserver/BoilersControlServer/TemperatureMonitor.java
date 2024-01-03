@@ -1,10 +1,19 @@
 package com.boilersserver.BoilersControlServer;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalTime;
 import java.util.LinkedList;
 
 public class TemperatureMonitor {
     private static final int BOILER_MAKATROVYH=-6;
+    @Getter
+    @Setter
+    private int lowLimit;
+    @Getter
+    @Setter
+    private int highLimit;
 
     public boolean isTemperatureAnomaly(String currentTemp, String tStreet,int numberOfBoiler, String fixedTpod,
                                         String correctTplan, String correctFromUsers) {
@@ -28,6 +37,8 @@ public class TemperatureMonitor {
             tPlan+=correct;
             tPlan+=Integer.parseInt(correctFromUsers);
             int currentTempInt = (int) Math.round(Double.parseDouble(currentTemp));
+            setLowLimit((int) (tPlan - 15));
+            setHighLimit((int) (tPlan + 12));
             return currentTempInt < (tPlan - 15) || currentTempInt > (tPlan + 12);
     }
 

@@ -188,7 +188,8 @@ public class TelegramService extends TelegramLongPollingBot {
                         if ((temperatureMonitor.isTemperatureAnomaly(boilersDataService.getBoilers().get(i).getTPod(),boilersDataService.getBoilers().get(i).getTUlica(),
                                 i,boilersDataService.getBoilers().get(i).getTPodFixed(),boilersDataService.getCorrections().getCorrectionTpod()[i],
                                 boilersDataService.getCorrections().getTAlarmCorrectionFromUsers()[i]))&&(!boilersDataService.getBoilers().get(i).getPPod().equals(INVALID_VALUE))) {
-                                sendAttention(i, "Проблема в температуре подачи!");
+                                sendAttention(i, "Проблема в температуре подачи!\n"+"Верхний предел: "+temperatureMonitor.getHighLimit()+
+                                        "\nНижний предел:"+temperatureMonitor.getLowLimit());
                                 Thread.sleep(SLEEP_TIME);
                         }
                     if (boilersDataService.getBoilers().get(i).getPPodLowFixed().equals("-1.0")||boilersDataService.getBoilers().get(i).getPPodHighFixed().equals("-1.0")){

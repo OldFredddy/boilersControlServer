@@ -53,7 +53,7 @@ public class Graphics {
         lines.setColor(lineColor);
         plot.setLineRenderers(data, lines);
         plot.setBackground(Color.BLACK);
-        plot.setInsets(new Insets2D.Double(20.0, 40.0, 40.0, 20.0));
+        plot.setInsets(new Insets2D.Double(0.0, 0.0, 0.0, 0.0));
         plot.setPointRenderers(data, (PointRenderer) null);
         AxisRenderer xAxisRenderer = new LinearRenderer2D();
         AxisRenderer yAxisRenderer = new LinearRenderer2D();
@@ -63,7 +63,7 @@ public class Graphics {
         yAxisRenderer.setTickLabelsVisible(true);
         plot.setAxisRenderer(XYPlot.AXIS_X, xAxisRenderer);
         plot.setAxisRenderer(XYPlot.AXIS_Y, yAxisRenderer);
-        BufferedImage image = new BufferedImage(8000, 2000, BufferedImage.TYPE_INT_RGB);
+        BufferedImage image = new BufferedImage(3500, 1000, BufferedImage.TYPE_INT_RGB);
         Graphics2D g2 = image.createGraphics();
         plot.setBounds(0, 0, image.getWidth(), image.getHeight());
         DrawingContext context = new DrawingContext(g2);
@@ -83,8 +83,6 @@ public class Graphics {
                 .map(json -> gson.fromJson(json, Boiler.class))
                 .sorted((b1, b2) -> Long.compare(b1.getLastUpdated(), b2.getLastUpdated()))
                 .collect(Collectors.toList());
-
-        // Извлечение tPod в отдельный список
         ArrayList<String> tPodList = new ArrayList<>();
         for (Boiler boiler : boilers) {
             tPodList.add(boiler.getTPod());
