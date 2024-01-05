@@ -308,7 +308,7 @@ public class TelegramService extends TelegramLongPollingBot {
         if (!secondAttempt[boilerIndex]){
             Thread.sleep(LONG_LONG_SLEEP_TIME);
             errorsArray[boilerIndex]=false;
-            if (errorsArray[boilerIndex]=true){
+            if (errorsArray[boilerIndex]==true){
                 boilersDataService.getBoilers().get(boilerIndex).setIsOk(1,boilersDataService.getBoilers().get(boilerIndex).getVersion()+1);
             }
             System.out.println("Вторая попытка сбросить ошибку на boiler№ "+boilerIndex);
