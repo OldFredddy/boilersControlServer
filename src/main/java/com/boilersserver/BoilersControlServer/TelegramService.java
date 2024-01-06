@@ -58,7 +58,7 @@ public class TelegramService extends TelegramLongPollingBot {
         clientsId.add(1102774002L);
 
         for (int i = 0; i < flagSilentReset.length; i++) {
-            flagSilentReset[i] = new AtomicBoolean(true);
+            flagSilentReset[i] = new AtomicBoolean(false);
         }
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId("@BoilersAnadyr");
@@ -189,9 +189,15 @@ public class TelegramService extends TelegramLongPollingBot {
                         if ((temperatureMonitor.isTemperatureAnomaly(boilersDataService.getBoilers().get(i).getTPod(),boilersDataService.getBoilers().get(i).getTUlica(),
                                 i,boilersDataService.getBoilers().get(i).getTPodFixed(),boilersDataService.getCorrections().getCorrectionTpod()[i],
                                 boilersDataService.getCorrections().getTAlarmCorrectionFromUsers()[i]))&&(!boilersDataService.getBoilers().get(i).getPPod().equals(INVALID_VALUE))) {
+                            if(!flagSilentReset[i].get()){
                                 sendAttention(i, "Проблема в температуре подачи!\n"+"Верхний предел: "+temperatureMonitor.getHighLimit()+" °C"+
                                         "\nНижний предел: "+temperatureMonitor.getLowLimit()+" °C");
                                 Thread.sleep(SLEEP_TIME);
+                            } else {
+                                flagSilentReset[i].set(false);
+                                errorsArray[i]=true;
+                            }
+
                         }
                     if (boilersDataService.getBoilers().get(i).getPPodLowFixed().equals("-1.0")||boilersDataService.getBoilers().get(i).getPPodHighFixed().equals("-1.0")){
                          currentPpodHigh=normalPvxHigh[i];
@@ -202,13 +208,23 @@ public class TelegramService extends TelegramLongPollingBot {
                     }
                         if ((Float.parseFloat(boilersDataService.getBoilers().get(i).getPPod()) < currentPpodLow)&&
                             (!boilersDataService.getBoilers().get(i).getPPod().equals("-1000"))) {
+                            if(!flagSilentReset[i].get()){
                         sendAttention(i, "Проблема в давлении! Ниже допустимого!");
                         Thread.sleep(2000);
+                            } else {
+                                flagSilentReset[i].set(false);
+                                errorsArray[i]=true;
+                            }
                     }
                     if ((Float.parseFloat(boilersDataService.getBoilers().get(i).getPPod()) > currentPpodHigh)&&
                             (!boilersDataService.getBoilers().get(i).getPPod().equals("-1000"))) {
+                        if(!flagSilentReset[i].get()){
                         sendAttention(i, "Проблема в давлении! Превышение!");
                         Thread.sleep(2000);
+                        } else {
+                            flagSilentReset[i].set(false);
+                            errorsArray[i]=true;
+                        }
                     }
                 }
                 System.gc();//TODO ПРОВЕРИТь System.gc()
@@ -285,7 +301,6 @@ public class TelegramService extends TelegramLongPollingBot {
         return result.toString();
     }
     public void sendAttention(int boilerIndex, String comment) throws TelegramApiException, InterruptedException {
-        checkForAvary=false;
         errorsArray[boilerIndex]=true;
         boilersDataService.getBoilers().get(boilerIndex).setIsOk(2,boilersDataService.getBoilers().get(boilerIndex).getVersion()+1);  //0-waiting 1 - good 2 - error
        if (enableCallService){
@@ -293,36 +308,31 @@ public class TelegramService extends TelegramLongPollingBot {
            ZvonokPostService.call("+79145353244");
        }
         for (int i = 0; i < clientsId.size() ; i++) {
-            if (secondAttempt[boilerIndex]&&flagSilentReset[boilerIndex].get()) {
-                SendMessage message1 = new SendMessage();
-                message1.setChatId(clientsId.get(i));      // чат id
-                message1.setText(boilerNames[boilerIndex] + "\n" + "Аварийное значение!" + " Общие параметры на момент аварии:" + "\n"
-                        + "\uD83D\uDD25 Температура уходящей воды: " + boilersDataService.getBoilers().get(boilerIndex).getTPod() + " °C" + "\n"
-                        + "⚖️\uD83D\uDCA8 Давление в системе отопления: " + boilersDataService.getBoilers().get(boilerIndex).getPPod() + " МПа" + "\n" + comment);
-                Message message = execute(message1);
-                avaryMessageID[i] = message.getMessageId();
-                Message message2 = execute(Messages.avaryKeyboard(String.valueOf(clientsId.get(i))));
-                avary3MessageID[i] = message2.getMessageId();
-            }
+            SendMessage message1 = new SendMessage();
+            message1.setChatId(clientsId.get(i));      // чат id
+            message1.setText(boilerNames[boilerIndex] + "\n" + "Аварийное значение!" + " Общие параметры на момент аварии:" + "\n"
+                    + "\uD83D\uDD25 Температура уходящей воды: " + boilersDataService.getBoilers().get(boilerIndex).getTPod() + " °C" + "\n"
+                    + "⚖️\uD83D\uDCA8 Давление в системе отопления: " + boilersDataService.getBoilers().get(boilerIndex).getPPod() + " МПа" + "\n" + comment);
+            Message message = execute(message1);
+            avaryMessageID[i] = message.getMessageId();
+            Message message2 = execute(Messages.avaryKeyboard(String.valueOf(clientsId.get(i))));
+            avary3MessageID[i] = message2.getMessageId();
         }
-        if (!secondAttempt[boilerIndex]){
-            Thread.sleep(LONG_LONG_SLEEP_TIME);
-            errorsArray[boilerIndex]=false;
-            if (errorsArray[boilerIndex]==true){
-                boilersDataService.getBoilers().get(boilerIndex).setIsOk(1,boilersDataService.getBoilers().get(boilerIndex).getVersion()+1);
-            }
-            System.out.println("Вторая попытка сбросить ошибку на boiler№ "+boilerIndex);
-            checkForAvary=true;
-            secondAttempt[boilerIndex]=true;
-        } else {
-            flagSilentReset[boilerIndex].set(true);
-        }
+       // if (!flagSilentReset[boilerIndex].get()){
+       //     Thread.sleep(LONG_LONG_SLEEP_TIME);
+       //     if (errorsArray[boilerIndex]){
+       //         boilersDataService.getBoilers().get(boilerIndex).setIsOk(1,boilersDataService.getBoilers().get(boilerIndex).getVersion()+1);
+       //     }
+       //     checkForAvary=true;
+       // } else {
+       //     flagSilentReset[boilerIndex].set(true);
+       // }
     }
 
     private void trySilentReset(int boilerIndex) {
             if (errorsArray[boilerIndex]) {
                 errorsArray[boilerIndex] = false;
-                flagSilentReset[boilerIndex].set(false);
+                flagSilentReset[boilerIndex].set(true);
                 boilersDataService.getBoilers().get(boilerIndex).setIsOk(1,boilersDataService.getBoilers().get(boilerIndex).getVersion()+1);
                 System.out.println("Ошибка котельной с индексом " + boilerIndex + " была успешно сброшена в тихом режиме.");
             }
