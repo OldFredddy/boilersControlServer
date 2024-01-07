@@ -16,7 +16,7 @@ public class TemperatureMonitor {
     private int highLimit;
 
     public boolean isTemperatureAnomaly(String currentTemp, String tStreet,int numberOfBoiler, String fixedTpod,
-                                        String correctTplan, String correctFromUsers) {
+                                        String correctTplan, String tAlarm) {
         int correct = Integer.parseInt(correctTplan);
         int tStreetInt = (int) Math.round(Double.parseDouble(tStreet));
         double tPlan = tStreetInt * tStreetInt * 0.00886 - 0.803 * tStreetInt + 54;
@@ -35,7 +35,9 @@ public class TemperatureMonitor {
         }
         tPlan-=5;
             tPlan+=correct;
-            tPlan+=Integer.parseInt(correctFromUsers);
+        String[] parts = tAlarm.split("\\.");
+        int tAlarmInt = Integer.parseInt(parts[0]);
+            tPlan=tAlarmInt-tPlan+tPlan;
             int currentTempInt = (int) Math.round(Double.parseDouble(currentTemp));
             setLowLimit((int) (tPlan - 15));
             setHighLimit((int) (tPlan + 12));
