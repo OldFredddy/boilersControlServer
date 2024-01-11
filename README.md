@@ -1,3 +1,1 @@
-# Getting Started
-
-
+Server for managing and controlling boiler parameters
