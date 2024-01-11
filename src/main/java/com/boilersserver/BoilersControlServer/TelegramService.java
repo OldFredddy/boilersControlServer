@@ -71,6 +71,7 @@ public class TelegramService extends TelegramLongPollingBot {
             e.printStackTrace();
         }
         monitorThread2.start();
+        pressureMonitor.start();
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
@@ -97,13 +98,22 @@ public class TelegramService extends TelegramLongPollingBot {
                     execute(deleteMessage);
                     Thread.sleep(SLEEP_TIME);
                 } catch (TelegramApiException | InterruptedException e) {
-
+                    e.printStackTrace();
                 }
                 for (int i = 0; i < errorsArray.length; i++) {
                     trySilentReset(i);
                 }
             }
         }, 5 * 60 * 1000, 5 * 60 * 1000);
+        timerSilintReset.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                for (AtomicBoolean atomicBoolean : flagSilentReset) {
+                    atomicBoolean.set(false);
+                }
+
+            }
+        }, 32  * 1000, 37  * 1000);
     }
     @Override
     public String getBotUsername() {
@@ -117,6 +127,9 @@ public class TelegramService extends TelegramLongPollingBot {
         timer.cancel();
         monitorThread2.interrupt();
         timer=null;
+        timerSilintReset.cancel();
+        timerSilintReset=null;
+        pressureMonitor.interrupt();
         monitorThread2=null;
         System.gc();
     }
@@ -151,9 +164,12 @@ public class TelegramService extends TelegramLongPollingBot {
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
     private Integer[] avaryMessageID=new Integer[2];
     private Timer timer = new Timer();
+    private Timer timerSilintReset = new Timer();
     Integer[] avary2MessageID= new Integer[2];
     Integer[] avary3MessageID=new Integer[2];
     public boolean [] errorsArray = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};
+    public boolean [] pressureErrorsArray = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};
+    public boolean [] temperatureErrorsArray = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};
     static volatile Integer messageId = -1;
     List<Long> clientsId = new ArrayList<>();
 
@@ -183,51 +199,77 @@ public class TelegramService extends TelegramLongPollingBot {
                 refreshMessage(getCurrentParamsText(errorsArray));
                 Thread.sleep(SLEEP_TIME);                                    //блок проверки аварий
                 for (int i = 0; i < boilersDataService.getBoilers().size(); i++) {
-                        if (errorsArray[i]){
+                        if (temperatureErrorsArray[i]){
                             continue;
                         }
-                        if ((temperatureMonitor.isTemperatureAnomaly(boilersDataService.getBoilers().get(i).getTPod(),boilersDataService.getBoilers().get(i).getTUlica(),
-                                i,boilersDataService.getBoilers().get(i).getTPodFixed(),boilersDataService.getCorrections().getCorrectionTpod()[i],
-                                boilersDataService.getBoilers().get(i).getTAlarm()))&&(!boilersDataService.getBoilers().get(i).getPPod().equals(INVALID_VALUE))) {
-                            if(!flagSilentReset[i].get()){
-                                sendAttention(i, "Проблема в температуре подачи!\n"+"Верхний предел: "+temperatureMonitor.getHighLimit()+" °C"+
-                                        "\nНижний предел: "+temperatureMonitor.getLowLimit()+" °C");
-                                Thread.sleep(SLEEP_TIME);
-                            } else {
-                                flagSilentReset[i].set(false);
-                                errorsArray[i]=true;
-                            }
-
-                        }
+                       if (!temperatureErrorsArray[i]) {
+                           if ((temperatureMonitor.isTemperatureAnomaly(boilersDataService.getBoilers().get(i).getTPod(), boilersDataService.getBoilers().get(i).getTUlica(),
+                                   i, boilersDataService.getBoilers().get(i).getTPodFixed(), boilersDataService.getCorrections().getCorrectionTpod()[i],
+                                   boilersDataService.getBoilers().get(i).getTAlarm())) && (!boilersDataService.getBoilers().get(i).getPPod().equals(INVALID_VALUE))) {
+                               if (!flagSilentReset[i].get()) {
+                                   sendAttention(i, "Проблема в температуре подачи!\n" + "Верхний предел: " + temperatureMonitor.getHighLimit() + " °C" +
+                                           "\nНижний предел: " + temperatureMonitor.getLowLimit() + " °C");
+                                   temperatureErrorsArray[i]=true;
+                                   Thread.sleep(SLEEP_TIME);
+                               } else {
+                                   flagSilentReset[i].set(false);
+                                   errorsArray[i] = true;
+                                   temperatureErrorsArray[i]=true;
+                               }
+                           }
+                       }
+                }
+                System.gc();//TODO ПРОВЕРИТЬ System.gc()
+            } catch (RuntimeException e) {
+                e.printStackTrace();
+            } catch (InterruptedException | TelegramApiException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    });
+    Thread pressureMonitor = new Thread(()->{
+        while (keepRunning){
+            try {
+                try {
+                    Thread.sleep(LONG_LONG_SLEEP_TIME);
+                    Thread.sleep(SLEEP_TIME);
+                } catch (InterruptedException e) {
+                    continue;
+                }
+                for (int i = 0; i < boilersDataService.getBoilers().size(); i++) {
+                    if (pressureErrorsArray[i]){
+                        continue;
+                    }
                     if (boilersDataService.getBoilers().get(i).getPPodLowFixed().equals("-1.0")||boilersDataService.getBoilers().get(i).getPPodHighFixed().equals("-1.0")){
-                         currentPpodHigh=normalPvxHigh[i];
-                         currentPpodLow=normalPvxLow[i];
+                        currentPpodHigh=normalPvxHigh[i];
+                        currentPpodLow=normalPvxLow[i];
                     } else {
                         currentPpodHigh=Double.parseDouble(boilersDataService.getBoilers().get(i).getPPodHighFixed());
                         currentPpodLow= Double.parseDouble(boilersDataService.getBoilers().get(i).getPPodLowFixed());
                     }
-                        if ((Float.parseFloat(boilersDataService.getBoilers().get(i).getPPod()) < currentPpodLow)&&
-                            (!boilersDataService.getBoilers().get(i).getPPod().equals("-1000"))) {
-                            if(!flagSilentReset[i].get()){
-                        sendAttention(i, "Проблема в давлении! Ниже допустимого!");
-                        Thread.sleep(2000);
+                    if (!pressureErrorsArray[i]) {
+                        if ((!boilersDataService.getBoilers().get(i).getPPod().equals("-1000")) &&                                          //pressure errors check
+                                ((Float.parseFloat(boilersDataService.getBoilers().get(i).getPPod()) < currentPpodLow) ||
+                                        (Float.parseFloat(boilersDataService.getBoilers().get(i).getPPod()) > currentPpodHigh))) {
+                            if (!flagSilentReset[i].get()) {
+                                String message;
+                                if (Float.parseFloat(boilersDataService.getBoilers().get(i).getPPod()) < currentPpodLow) {
+                                    message = "Проблема в давлении! Ниже допустимого!";
+                                } else {
+                                    message = "Проблема в давлении! Превышение!";
+                                }
+                                sendAttention(i, message);
+                                pressureErrorsArray[i]=true;
+                                Thread.sleep(2000);
                             } else {
                                 flagSilentReset[i].set(false);
-                                errorsArray[i]=true;
+                                errorsArray[i] = true;
+                                pressureErrorsArray[i]=true;
                             }
-                    }
-                    if ((Float.parseFloat(boilersDataService.getBoilers().get(i).getPPod()) > currentPpodHigh)&&
-                            (!boilersDataService.getBoilers().get(i).getPPod().equals("-1000"))) {
-                        if(!flagSilentReset[i].get()){
-                        sendAttention(i, "Проблема в давлении! Превышение!");
-                        Thread.sleep(2000);
-                        } else {
-                            flagSilentReset[i].set(false);
-                            errorsArray[i]=true;
                         }
                     }
                 }
-                System.gc();//TODO ПРОВЕРИТь System.gc()
+                System.gc();//TODO ПРОВЕРИТЬ System.gc()
             } catch (RuntimeException e) {
                 e.printStackTrace();
                 continue;
@@ -236,6 +278,7 @@ public class TelegramService extends TelegramLongPollingBot {
             }
         }
     });
+
     private void refreshMessage(String text){
         LocalTime currentTime = LocalTime.now();
         LocalTime timePlusNine = currentTime.plusHours(9);
@@ -331,8 +374,10 @@ public class TelegramService extends TelegramLongPollingBot {
 
     private void trySilentReset(int boilerIndex) {
             if (errorsArray[boilerIndex]) {
-                errorsArray[boilerIndex] = false;
                 flagSilentReset[boilerIndex].set(true);
+                errorsArray[boilerIndex] = false;
+                temperatureErrorsArray[boilerIndex]=false;
+                pressureErrorsArray[boilerIndex]=false;
                 boilersDataService.getBoilers().get(boilerIndex).setIsOk(1,boilersDataService.getBoilers().get(boilerIndex).getVersion()+1);
                 System.out.println("Ошибка котельной с индексом " + boilerIndex + " была успешно сброшена в тихом режиме.");
             }
@@ -378,6 +423,8 @@ public class TelegramService extends TelegramLongPollingBot {
             if (update.getCallbackQuery().getData().equals("avaryReset")){
                 for (int i = 0; i < errorsArray.length; i++) {
                     errorsArray[i]=false;
+                    pressureErrorsArray[i]=false;
+                    temperatureErrorsArray[i]=false;
                     secondAttempt[i]=false;
                 }
                 checkForAvary=true;
@@ -621,6 +668,8 @@ public class TelegramService extends TelegramLongPollingBot {
         for (int i = 0; i < errorsArray.length; i++) {
             errorsArray[i]=false;
             secondAttempt[i]=false;
+            pressureErrorsArray[i]=false;
+            temperatureErrorsArray[i]=false;
         }
         checkForAvary=true;
     }

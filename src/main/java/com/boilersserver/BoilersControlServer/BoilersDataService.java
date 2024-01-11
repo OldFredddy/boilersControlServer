@@ -67,20 +67,33 @@ public class BoilersDataService {
         this.connectionProvider.dispose();
         System.out.println("clean BoilersDataService");
     }
+    public boolean forFirstStart = true;
     @Scheduled(fixedRate = 3000)
     public void fetchBoilerData() {
         if (isUpdateInProgress.compareAndSet(false, true)) {
             getBoilersFromClient()
                     .subscribe(
                             boilersList -> {
-                                int[] tempErrors=new int[14];
-                                for (int i = 0; i < boilers.size(); i++) {
-                                    tempErrors[i]=boilers.get(i).getIsOk();
+                                for (int i = 0; i < boilersList.size(); i++) {
+                                    this.boilers.get(i).setTPod(boilersList.get(i).getTPod());
+                                    this.boilers.get(i).setPPod(boilersList.get(i).getPPod());
+                                    this.boilers.get(i).setTUlica(boilersList.get(i).getTUlica());
+                                    this.boilers.get(i).setTPodFixed(boilersList.get(i).getTPodFixed());
+                                    this.boilers.get(i).setPPodHighFixed(boilersList.get(i).getPPodHighFixed());
+                                    this.boilers.get(i).setPPodLowFixed(boilersList.get(i).getPPodLowFixed());
+                                    this.boilers.get(i).setTPlan(boilersList.get(i).getTPlan());
+                                    this.boilers.get(i).setImageResId(boilersList.get(i).getImageResId());
+                                    this.boilers.get(i).setId(boilersList.get(i).getId());
+                                    this.boilers.get(i).setTAlarm(boilersList.get(i).getTAlarm());
+
                                 }
-                                this.boilers = boilersList;
-                                for (int i = 0; i < boilers.size(); i++) {
-                                    boilers.get(i).setIsOk(tempErrors[i],2);
+                                if (forFirstStart){
+                                    for (Boiler boiler : this.boilers) {
+                                        boiler.setIsOk(1, 2);
+                                    }
+                                    forFirstStart=false;
                                 }
+
                                 isUpdateInProgress.set(false);
                             },
                             error -> {
