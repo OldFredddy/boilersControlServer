@@ -5,10 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.gson.GsonAutoConfiguration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -23,7 +20,7 @@ public class RESTController {
         this.boilersDataService = boilersDataService;
         this.temperatureCorrections = temperatureCorrections;
     }
-
+    @CrossOrigin(origins = "*")
     @GetMapping("/getparams")
     public ResponseEntity<String> getParams() {
         try {
@@ -35,6 +32,7 @@ public class RESTController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
         }
     }
+    @CrossOrigin(origins = "*")
     @PostMapping("/settemperaturecorrections")
     public String setNewCorrections(@RequestBody String[] temperatureCorrectionsArr) {
         try {
@@ -45,6 +43,7 @@ public class RESTController {
             return "Error: " + e.getMessage();
         }
     }
+    @CrossOrigin(origins = "*")
     @PostMapping("/setAlarmCorrections")
     public String setAlarmCorrections(@RequestBody String[] temperatureCorrectionsArr) {
         try {
@@ -55,6 +54,7 @@ public class RESTController {
             return "Error: " + e.getMessage();
         }
     }
+    @CrossOrigin(origins = "*")
     @PostMapping("/avaryreset")
     public String setAvaryReset() {
         try {
@@ -62,7 +62,7 @@ public class RESTController {
                 boilersDataService.getBoilers().get(i).setIsOk(1,boilersDataService.getBoilers().get(i).getVersion()+1);//0-waiting 1 - good 2 - error
             }
             telegramService.resetError();
-            return "Success";
+            return "Успех!";
         } catch (Exception e) {
             return "Error: " + e.getMessage();
         }

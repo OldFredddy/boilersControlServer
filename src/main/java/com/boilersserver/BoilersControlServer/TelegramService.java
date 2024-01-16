@@ -203,9 +203,10 @@ public class TelegramService extends TelegramLongPollingBot {
                             continue;
                         }
                        if (!temperatureErrorsArray[i]) {
-                           if ((temperatureMonitor.isTemperatureAnomaly(boilersDataService.getBoilers().get(i).getTPod(), boilersDataService.getBoilers().get(i).getTUlica(),
-                                   i, boilersDataService.getBoilers().get(i).getTPodFixed(), boilersDataService.getCorrections().getCorrectionTpod()[i],
-                                   boilersDataService.getBoilers().get(i).getTAlarm())) && (!boilersDataService.getBoilers().get(i).getPPod().equals(INVALID_VALUE))) {
+                           if ((temperatureMonitor.isTemperatureAnomaly(i,
+                                   boilersDataService.getCorrections().getCorrectionTpod()[i],
+                                   boilersDataService.getBoilers().get(i))) &&
+                                   (!boilersDataService.getBoilers().get(i).getPPod().equals(INVALID_VALUE))) {
                                if (!flagSilentReset[i].get()) {
                                    sendAttention(i, "Проблема в температуре подачи!\n" + "Верхний предел: " + temperatureMonitor.getHighLimit() + " °C" +
                                            "\nНижний предел: " + temperatureMonitor.getLowLimit() + " °C");
@@ -248,7 +249,7 @@ public class TelegramService extends TelegramLongPollingBot {
                         currentPpodLow= Double.parseDouble(boilersDataService.getBoilers().get(i).getPPodLowFixed());
                     }
                     if (!pressureErrorsArray[i]) {
-                        if ((!boilersDataService.getBoilers().get(i).getPPod().equals("-1000")) &&                                          //pressure errors check
+                        if ((!boilersDataService.getBoilers().get(i).getPPod().equals(INVALID_VALUE)) &&                                          //pressure errors check
                                 ((Float.parseFloat(boilersDataService.getBoilers().get(i).getPPod()) < currentPpodLow) ||
                                         (Float.parseFloat(boilersDataService.getBoilers().get(i).getPPod()) > currentPpodHigh))) {
                             if (!flagSilentReset[i].get()) {

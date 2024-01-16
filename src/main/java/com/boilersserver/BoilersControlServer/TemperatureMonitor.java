@@ -15,15 +15,16 @@ public class TemperatureMonitor {
     @Setter
     private int highLimit;
 
-    public boolean isTemperatureAnomaly(String currentTemp, String tStreet,int numberOfBoiler, String fixedTpod,
-                                        String correctTplan, String tAlarm) {
+    public boolean isTemperatureAnomaly(int numberOfBoiler,
+                                        String correctTplan, Boiler boiler) {
+
         int correct = Integer.parseInt(correctTplan);
-        int tStreetInt = (int) Math.round(Double.parseDouble(tStreet));
+        int tStreetInt = (int) Math.round(Double.parseDouble(boiler.getTUlica()));
         double tPlan = tStreetInt * tStreetInt * 0.00886 - 0.803 * tStreetInt + 54;
 
 
-        if (!fixedTpod.equals("-1")) {
-            tPlan= Integer.parseInt(fixedTpod);
+        if (!boiler.getTPodFixed().equals("-1")) {
+            tPlan= Integer.parseInt(boiler.getTPodFixed());
         }
         if (numberOfBoiler == 8){
             LocalTime currentTime = LocalTime.now();
@@ -35,10 +36,10 @@ public class TemperatureMonitor {
         }
         tPlan-=5;
             tPlan+=correct;
-        String[] parts = tAlarm.split("\\.");
+        String[] parts = boiler.getTAlarm().split("\\.");
         int tAlarmInt = Integer.parseInt(parts[0]);
             tPlan=tAlarmInt-tPlan+tPlan;
-            int currentTempInt = (int) Math.round(Double.parseDouble(currentTemp));
+            int currentTempInt = (int) Math.round(Double.parseDouble(boiler.getTPod()));
             setLowLimit((int) (tPlan - 15));
             setHighLimit((int) (tPlan + 12));
             return currentTempInt < (tPlan - 15) || currentTempInt > (tPlan + 12);
