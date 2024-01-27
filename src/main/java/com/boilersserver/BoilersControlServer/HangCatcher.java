@@ -60,7 +60,7 @@ public class HangCatcher {
     }
 
     private void updateList(List<String> list, String newValue) {
-        if (list.size() >= 150) {
+        if (list.size() >= 300) {
             list.remove(0);
         }
         list.add(newValue);
@@ -70,3 +70,4 @@ public class HangCatcher {
         return list.size() > 1 && new HashSet<>(list).size() == 1;
     }
 }
+

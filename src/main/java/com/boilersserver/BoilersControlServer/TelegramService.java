@@ -199,14 +199,15 @@ public class TelegramService extends TelegramLongPollingBot {
                 refreshMessage(getCurrentParamsText(errorsArray));
                 Thread.sleep(SLEEP_TIME);                                    //блок проверки аварий
                 for (int i = 0; i < boilersDataService.getBoilers().size(); i++) {
+                       Boiler boiler = boilersDataService.getBoilers().get(i);
                         if (temperatureErrorsArray[i]){
                             continue;
                         }
                        if (!temperatureErrorsArray[i]) {
-                           if ((temperatureMonitor.isTemperatureAnomaly(i,
+                           if ((temperatureMonitor.isTemperatureAnomaly(boiler.getId(),
                                    boilersDataService.getCorrections().getCorrectionTpod()[i],
-                                   boilersDataService.getBoilers().get(i))) &&
-                                   (!boilersDataService.getBoilers().get(i).getPPod().equals(INVALID_VALUE))) {
+                                  boiler)) &&
+                                   (!boiler.getPPod().equals(INVALID_VALUE))) {
                                if (!flagSilentReset[i].get()) {
                                    sendAttention(i, "Проблема в температуре подачи!\n" + "Верхний предел: " + temperatureMonitor.getHighLimit() + " °C" +
                                            "\nНижний предел: " + temperatureMonitor.getLowLimit() + " °C");
@@ -362,15 +363,7 @@ public class TelegramService extends TelegramLongPollingBot {
             Message message2 = execute(Messages.avaryKeyboard(String.valueOf(clientsId.get(i))));
             avary3MessageID[i] = message2.getMessageId();
         }
-       // if (!flagSilentReset[boilerIndex].get()){
-       //     Thread.sleep(LONG_LONG_SLEEP_TIME);
-       //     if (errorsArray[boilerIndex]){
-       //         boilersDataService.getBoilers().get(boilerIndex).setIsOk(1,boilersDataService.getBoilers().get(boilerIndex).getVersion()+1);
-       //     }
-       //     checkForAvary=true;
-       // } else {
-       //     flagSilentReset[boilerIndex].set(true);
-       // }
+
     }
 
     private void trySilentReset(int boilerIndex) {
