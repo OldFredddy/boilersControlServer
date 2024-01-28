@@ -33,11 +33,61 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 @Component
 public class TelegramService extends TelegramLongPollingBot {
+    Graphics graphics;
+    static volatile boolean keepRunning = true;
+    static volatile int boilerControlNum = -1;
+    private final boolean[] secondAttempt={false,false,false,false,false,false,false,false,false,false,false,false,false,false};
+    public String[] boilerNames = {
+            "Котельная «Склады Мищенко»",                   //0   кот№1 Склады Мищенко
+            "Котельная «Выставка Ендальцева»",              //1   кот№2 Ендальцев         (датчик на базе)
+            "Котельная «ЧукотОптТорг»",                     //2   кот№3 ЧукотОптТорг      (датчик на базе)
+            "Котельная «ЧСБК новая»",                       //3   кот№4 "ЧСБК Новая"
+            "Котельная «Офис СВТ»",                         //4   кот№5 офис "СВТ"
+            "Котельная «Общежитие на Южной»",               //5   кот№6 общежитие на Южной
+            "Котельная «Офис ЧСБК»",                        //6   кот№7 офис ЧСБК
+            "Котельная «Рынок»",                            //7   кот№8 "Рынок"
+            "Котельная «Макатровых»",                       //8   кот№9 Макатровых
+            "Котельная ДС «Сказка»",                        //9   кот№10  "Д/С Сказка"
+            "Котельная «Полярный»",                         //10  кот№11 Полярный
+            "Котельная «Департамент»",                      //11  кот№12 Департамент
+            "Котельная «Офис ЧСБК квартиры»",               //12  кот№13 квартиры в офисе
+            "Котельная Шишкина"                             //13  кот№14 ТО Шишкина
+    };
+    private volatile boolean enableCallService=false;
+    public float[] normalPvxHigh={0.5f, 0.5f, 0.5f, 0.5f, 0.35f, 6.0f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f,0.5f, 0.53f};
+    public float[] normalPvxLow= {0.32f, 0.32f, 0.23f, 0.29f, 0.12f, 1.0f, 0.02f, 0.32f, 0.30f, 0.32f, 0.32f, 0.32f, 0.02f, 0.22f};
+    private Integer[] avaryMessageID=new Integer[2];
+    private Timer timer = new Timer();
+    private Timer timerSilintReset = new Timer();
+    Integer[] avary2MessageID= new Integer[2];
+    Integer[] avary3MessageID=new Integer[2];
+    public boolean [] errorsArray = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};
+    public boolean [] pressureErrorsArray = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};
+    public boolean [] temperatureErrorsArray = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};
+    static volatile Integer messageId = -1;
+    List<Long> clientsId = new ArrayList<>();
+    public boolean checkForAvary =true;
+    private static final String TEMPERATURE_PROBLEM_MESSAGE = "Проблема в температуре подачи!";
+    private static final String PRESSURE_PROBLEM_LOW_MESSAGE = "Проблема в давлении! Ниже допустимого!";
+    private static final String PRESSURE_PROBLEM_HIGH_MESSAGE = "Проблема в давлении! Превышение!";
+    private static final String INVALID_VALUE = "-1000";
+    private static final long SLEEP_TIME = 2000L;
+    private static final long LONG_SLEEP_TIME = 2800L;
+    private static final long LONG_LONG_SLEEP_TIME = 4500L;
+    private static final long SHORT_SLEEP_TIME = 2800L;
+    private volatile BoilersDataService boilersDataService;
+    private volatile BoilerLoggingService boilerLoggingService;
+    private TemperatureMonitor temperatureMonitor = new TemperatureMonitor();
+    Tokens tokens;
+    double currentPpodHigh;
+    double currentPpodLow;
+
     @Autowired
-    public TelegramService(BoilersDataService boilersDataService, Tokens tokens, Graphics graphics)  {
+    public TelegramService(BoilersDataService boilersDataService, Tokens tokens, Graphics graphics, BoilerLoggingService boilerLoggingService)  {
         this.boilersDataService = boilersDataService;
         this.tokens = tokens;
         this.graphics=graphics;
+        this.boilerLoggingService=boilerLoggingService;
     }
     AtomicBoolean[] flagSilentReset = new AtomicBoolean[14];
     @PostConstruct
@@ -133,60 +183,6 @@ public class TelegramService extends TelegramLongPollingBot {
         monitorThread2=null;
         System.gc();
     }
-    Graphics graphics;
-    static volatile boolean keepRunning = true;
-    static volatile int boilerControlNum = -1;
-    private final boolean[] secondAttempt={false,false,false,false,false,false,false,false,false,false,false,false,false,false};
-    public String[] boilerNames = {
-            "Котельная «Склады Мищенко»",                   //0   кот№1 Склады Мищенко
-            "Котельная «Выставка Ендальцева»",              //1   кот№2 Ендальцев         (датчик на базе)
-            "Котельная «ЧукотОптТорг»",                     //2   кот№3 ЧукотОптТорг      (датчик на базе)
-            "Котельная «ЧСБК новая»",                       //3   кот№4 "ЧСБК Новая"
-            "Котельная «Офис СВТ»",                         //4   кот№5 офис "СВТ"
-            "Котельная «Общежитие на Южной»",               //5   кот№6 общежитие на Южной
-            "Котельная «Офис ЧСБК»",                        //6   кот№7 офис ЧСБК
-            "Котельная «Рынок»",                            //7   кот№8 "Рынок"
-            "Котельная «Макатровых»",                       //8   кот№9 Макатровых
-            "Котельная ДС «Сказка»",                        //9   кот№10  "Д/С Сказка"
-            "Котельная «Полярный»",                         //10  кот№11 Полярный
-            "Котельная «Департамент»",                      //11  кот№12 Департамент
-            "Котельная «Офис ЧСБК квартиры»",               //12  кот№13 квартиры в офисе
-            "Котельная Шишкина"                             //13  кот№14 ТО Шишкина
-    };
-    private volatile int[] fixedTpod;
-    private volatile float[] fixedPpodHigh;
-    private volatile float[] fixedPpodLow;
-    private volatile boolean enableCallService=false;
- public volatile String[] correctForScada = {"0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"};
- public volatile String[] correctFromUsers = {"0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"};
-    public float[] normalPvxHigh={0.5f, 0.5f, 0.5f, 0.5f, 0.35f, 6.0f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f,0.5f, 0.53f};
-    public float[] normalPvxLow= {0.32f, 0.32f, 0.23f, 0.29f, 0.12f, 1.0f, 0.02f, 0.32f, 0.30f, 0.32f, 0.32f, 0.32f, 0.02f, 0.22f};
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-    private Integer[] avaryMessageID=new Integer[2];
-    private Timer timer = new Timer();
-    private Timer timerSilintReset = new Timer();
-    Integer[] avary2MessageID= new Integer[2];
-    Integer[] avary3MessageID=new Integer[2];
-    public boolean [] errorsArray = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};
-    public boolean [] pressureErrorsArray = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};
-    public boolean [] temperatureErrorsArray = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};
-    static volatile Integer messageId = -1;
-    List<Long> clientsId = new ArrayList<>();
-
-    public boolean checkForAvary =true;
-    private static final String TEMPERATURE_PROBLEM_MESSAGE = "Проблема в температуре подачи!";
-    private static final String PRESSURE_PROBLEM_LOW_MESSAGE = "Проблема в давлении! Ниже допустимого!";
-    private static final String PRESSURE_PROBLEM_HIGH_MESSAGE = "Проблема в давлении! Превышение!";
-    private static final String INVALID_VALUE = "-1000";
-    private static final long SLEEP_TIME = 2000L;
-    private static final long LONG_SLEEP_TIME = 2800L;
-    private static final long LONG_LONG_SLEEP_TIME = 4500L;
-    private static final long SHORT_SLEEP_TIME = 2800L;
-    private volatile BoilersDataService boilersDataService;
-    private TemperatureMonitor temperatureMonitor = new TemperatureMonitor();
-    Tokens tokens;
-    double currentPpodHigh;
-    double currentPpodLow;
 
     Thread monitorThread2 = new Thread(()->{
         while (keepRunning){
@@ -348,22 +344,23 @@ public class TelegramService extends TelegramLongPollingBot {
     public void sendAttention(int boilerIndex, String comment) throws TelegramApiException, InterruptedException {
         errorsArray[boilerIndex]=true;
         boilersDataService.getBoilers().get(boilerIndex).setIsOk(2,boilersDataService.getBoilers().get(boilerIndex).getVersion()+1);  //0-waiting 1 - good 2 - error
-       if (enableCallService){
-           ZvonokPostService.call("+79140808817");
-           ZvonokPostService.call("+79145353244");
-       }
+         if (enableCallService){
+                 ZvonokPostService.call("+79140808817");
+                 ZvonokPostService.call("+79145353244");
+             }
+         String msgText=boilerNames[boilerIndex] + "\n" + "Аварийное значение!" + " Общие параметры на момент аварии:" + "\n"
+                 + "\uD83D\uDD25 Температура уходящей воды: " + boilersDataService.getBoilers().get(boilerIndex).getTPod() + " °C" + "\n"
+                 + "⚖️\uD83D\uDCA8 Давление в системе отопления: " + boilersDataService.getBoilers().get(boilerIndex).getPPod() + " МПа" + "\n" + comment;
         for (int i = 0; i < clientsId.size() ; i++) {
             SendMessage message1 = new SendMessage();
             message1.setChatId(clientsId.get(i));      // чат id
-            message1.setText(boilerNames[boilerIndex] + "\n" + "Аварийное значение!" + " Общие параметры на момент аварии:" + "\n"
-                    + "\uD83D\uDD25 Температура уходящей воды: " + boilersDataService.getBoilers().get(boilerIndex).getTPod() + " °C" + "\n"
-                    + "⚖️\uD83D\uDCA8 Давление в системе отопления: " + boilersDataService.getBoilers().get(boilerIndex).getPPod() + " МПа" + "\n" + comment);
+            message1.setText(msgText);
             Message message = execute(message1);
             avaryMessageID[i] = message.getMessageId();
             Message message2 = execute(Messages.avaryKeyboard(String.valueOf(clientsId.get(i))));
             avary3MessageID[i] = message2.getMessageId();
         }
-
+        boilerLoggingService.logBoilerStatus(boilersDataService.getBoilers().get(boilerIndex),msgText);
     }
 
     private void trySilentReset(int boilerIndex) {
@@ -373,7 +370,7 @@ public class TelegramService extends TelegramLongPollingBot {
                 temperatureErrorsArray[boilerIndex]=false;
                 pressureErrorsArray[boilerIndex]=false;
                 boilersDataService.getBoilers().get(boilerIndex).setIsOk(1,boilersDataService.getBoilers().get(boilerIndex).getVersion()+1);
-                System.out.println("Ошибка котельной с индексом " + boilerIndex + " была успешно сброшена в тихом режиме.");
+                boilerLoggingService.logBoilerStatus(boilersDataService.getBoilers().get(boilerIndex),"Ошибка котельной с индексом " + boilerIndex + " была успешно сброшена в тихом режиме.");
             }
     }
     @SneakyThrows
@@ -640,22 +637,14 @@ public class TelegramService extends TelegramLongPollingBot {
     }
 
     int numErrBoiler = 0;
-    public boolean arraysEquals(String[] a1, String[] a2, String[] a3){
-        boolean allEquals=true;
-        for (int i = 0; i < a1.length; i++) {
-         if(!a1[i].equals(a2[i]))  {allEquals=false;numErrBoiler=i;}
-         if(!a1[i].equals(a3[i]))  {allEquals=false;numErrBoiler=i;}
-         if(!a2[i].equals(a3[i]))  {allEquals=false;numErrBoiler=i;}
-        }
-        return allEquals;
-    }
+
     public int extractBoilerControlNum(String data) {
         Pattern pattern = Pattern.compile("boiler(\\d+)");
         Matcher matcher = pattern.matcher(data);
         if (matcher.find()) {
             return Integer.parseInt(matcher.group(1));
         } else {
-            return 2; // для избегания ошибок
+            return 2;
         }
     }
     public void resetError(){
