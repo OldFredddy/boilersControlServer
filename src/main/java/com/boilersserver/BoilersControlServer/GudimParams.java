@@ -1,24 +1,20 @@
 package com.boilersserver.BoilersControlServer;
 
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 @Getter
 @Component
-public class Boiler {
+public class GudimParams {
     private int isOk;  // 0-waiting, 1 - good, 2 - error
-    @Setter private String tPod;
-    @Setter private String pPod;
-    @Setter private String tUlica;
-    @Setter private String tPlan;
-    @Setter private String tAlarm;
-    @Setter private int imageResId;
-    @Setter private String pPodLowFixed;
-    @Setter private String pPodHighFixed;
-    @Setter private String tPodFixed;
+    @Setter private String well1Tpod;
+    @Setter private String well2Tpod;
+    @Setter private String Reserv1Tpod;
+    @Setter private String Reserv2Tpod;
+    @Setter private String Reserv1Lvl;
+    @Setter private String Reserv2Lvl;
+    @Setter private String inTownTpod;
     @Setter private Integer id;
     @Setter private long version;
     @Setter private long lastUpdated;
