@@ -17,4 +17,14 @@ public class JsonMapper {
         Type listType = new TypeToken<TemperatureCorrections>(){}.getType();
         return gson.fromJson(json, listType);
     }
+    public static TemperatureCorrections mapJsonToGudimParams(String json) {
+        Gson gson = new Gson();
+        Type listType = new TypeToken<GudimParams>(){}.getType();
+        return gson.fromJson(json, listType);
+    }
+    public static TemperatureCorrections mapJsonToPumpStation(String json) {
+        Gson gson = new Gson();
+        Type listType = new TypeToken<PumpStation>(){}.getType();
+        return gson.fromJson(json, listType);
+    }
 }

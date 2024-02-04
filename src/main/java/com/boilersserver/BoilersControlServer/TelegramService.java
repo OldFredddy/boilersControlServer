@@ -104,7 +104,7 @@ public class TelegramService extends TelegramLongPollingBot {
            timer.cancel();
             System.out.println("ShutdownHook executed");
         }));
-        clientsId.add(6290939545L);
+        clientsId.add(6290939545L);//TODO enter by xml or smth else
         clientsId.add(1102774002L);
 
         for (int i = 0; i < flagSilentReset.length; i++) {
@@ -267,7 +267,7 @@ public class TelegramService extends TelegramLongPollingBot {
                         }
                     }
                 }
-                System.gc();//TODO ПРОВЕРИТЬ System.gc()
+                System.gc();
             } catch (RuntimeException e) {
                 e.printStackTrace();
                 continue;
@@ -325,7 +325,7 @@ public class TelegramService extends TelegramLongPollingBot {
         }
         String format = "| %" + maxLengths[0] + "s | %" + maxLengths[1] + "s | %" + maxLengths[2] + "s | %" + maxLengths[3] + "s | %" + maxLengths[4] + "s \n";
         String header = String.format(format, "№", "Tпод", "Pпод", "Tул", "S");
-        int maxWidth1 = maxLengths[0] + maxLengths[1] + maxLengths[2] + maxLengths[3] + maxLengths[4] + 9; // 9 - это пробелы и границы таблицы
+        int maxWidth1 = maxLengths[0] + maxLengths[1] + maxLengths[2] + maxLengths[3] + maxLengths[4] + 9; // 9 - spaces and table borders
         int tStreetInt = Math.round(Float.parseFloat(boilersDataService.getBoilers().get(1).getTUlica()));
         int tPlan = Math.round(tStreetInt * tStreetInt * 0.00886f - 0.803f * tStreetInt + 54);
         String centeredText = ("              По графику: " + tPlan+"°C");
@@ -345,7 +345,7 @@ public class TelegramService extends TelegramLongPollingBot {
         errorsArray[boilerIndex]=true;
         boilersDataService.getBoilers().get(boilerIndex).setIsOk(2,boilersDataService.getBoilers().get(boilerIndex).getVersion()+1);  //0-waiting 1 - good 2 - error
          if (enableCallService){
-                 ZvonokPostService.call("+79140808817");
+                 ZvonokPostService.call("+79140808817");//TODO Replace with xml|.conf
                  ZvonokPostService.call("+79145353244");
              }
          String msgText=boilerNames[boilerIndex] + "\n" + "Аварийное значение!" + " Общие параметры на момент аварии:" + "\n"
