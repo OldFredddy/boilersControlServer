@@ -341,6 +341,68 @@ public class TelegramService extends TelegramLongPollingBot {
         result.append("```\n");
         return result.toString();
     }
+    public String getGudimParamsTable(GudimParams gudimParams) {
+        StringBuilder table = new StringBuilder();
+        // Определение формата строки таблицы
+        String rowFormat = "| %-11s | %-6s | %-11s | %-6s | %-7s |\n";
+
+        // Добавление заголовка таблицы
+        table.append(String.format(rowFormat, "Имя", "Тпод", "Ур. воды", "Расход", "Статус"));
+
+        // Формирование строк таблицы для каждого параметра
+        table.append(String.format(rowFormat, "Ск.1", gudimParams.getWell1Tpod(), "", "", getStatusEmoji(gudimParams.getIsOk())));
+        table.append(String.format(rowFormat, "Ск.2", gudimParams.getWell2Tpod(), "", "", getStatusEmoji(gudimParams.getIsOk())));
+        table.append(String.format(rowFormat, "Резервуар 1", gudimParams.getReserv1Tpod(), gudimParams.getReserv1Lvl(), "", getStatusEmoji(gudimParams.getIsOk())));
+        table.append(String.format(rowFormat, "Резервуар 2", gudimParams.getReserv2Tpod(), gudimParams.getReserv2Lvl(), "", getStatusEmoji(gudimParams.getIsOk())));
+        table.append(String.format(rowFormat, "В город", gudimParams.getInTownTpod(), "", gudimParams.getInTownFlow(), getStatusEmoji(gudimParams.getIsOk())));
+
+        return table.toString();
+    }
+
+    public String getGudimParamsTable1(GudimParams gudimParams) {
+        // Используем StringBuilder для построения результата
+        StringBuilder result = new StringBuilder();
+        // Данные для таблицы
+        Object[][] rows = {
+                {"Ск.1", gudimParams.getWell1Tpod(), "", "", getStatusEmoji(gudimParams.getIsOk())},
+                {"Ск.2", gudimParams.getWell2Tpod(), "", "", getStatusEmoji(gudimParams.getIsOk())},
+                {"Резервуар 1", gudimParams.getReserv1Tpod(), gudimParams.getReserv1Lvl(), "", getStatusEmoji(gudimParams.getIsOk())},
+                {"Резервуар 2", gudimParams.getReserv2Tpod(), gudimParams.getReserv2Lvl(), "", getStatusEmoji(gudimParams.getIsOk())},
+                {"В город", gudimParams.getInTownTpod(), "", gudimParams.getInTownFlow(), getStatusEmoji(gudimParams.getIsOk())}
+        };
+
+        // Определение максимальной длины для каждого столбца
+        int[] maxLengths = new int[5];
+        for (Object[] row : rows) {
+            for (int i = 0; i < row.length; i++) {
+                maxLengths[i] = Math.max(maxLengths[i], row[i].toString().length());
+            }
+        }
+
+        // Установка формата строки с учетом максимальных длин
+        String format = "| %-" + (maxLengths[0] + 2) + "s| %-" + (maxLengths[1] + 2) + "s| %-" + (maxLengths[2] + 2) +
+                "s| %-" + (maxLengths[3] + 2) + "s| %-" + (maxLengths[4] + 1) + "s |\n";
+
+        // Добавление заголовка таблицы
+        result.append(String.format(format, "Имя", "Тпод", "Ур. воды", "Расход", "Статус"));
+
+        // Добавление строк таблицы
+        for (Object[] row : rows) {
+            result.append(String.format(format, row));
+        }
+
+        return result.toString();
+    }
+
+    private String getStatusEmoji(int status) {
+        switch (status) {
+            case 0: return "⏳"; // waiting
+            case 1: return "🟢"; // good
+            case 2: return "🔴"; // error
+            default: return "❓"; // unknown
+        }
+    }
+
     public void sendAttention(int boilerIndex, String comment) throws TelegramApiException, InterruptedException {
         errorsArray[boilerIndex]=true;
         boilersDataService.getBoilers().get(boilerIndex).setIsOk(2,boilersDataService.getBoilers().get(boilerIndex).getVersion()+1);  //0-waiting 1 - good 2 - error

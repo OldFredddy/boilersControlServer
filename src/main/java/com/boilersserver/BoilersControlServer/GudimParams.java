@@ -16,6 +16,7 @@ public class GudimParams {
     @Setter private String Reserv2Lvl;
     @Setter private String inTownTpod;
     @Setter private Integer id;
+    @Setter private String inTownFlow;
     @Setter private long version;
     @Setter private long lastUpdated;
     public void setIsOk(int isOk, long newVersion) {
