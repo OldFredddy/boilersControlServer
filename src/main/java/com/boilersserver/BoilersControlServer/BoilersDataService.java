@@ -32,7 +32,7 @@ public class BoilersDataService {
     private final ConnectionProvider connectionProvider;
     private final AtomicBoolean isUpdateInProgress = new AtomicBoolean(false);
     private final AtomicBoolean isUpdateInProgress2 = new AtomicBoolean(false);
-    private static final String IP = "http://85.175.232.186:4567";//85.175.232.186:4567
+    private static final String IP = "http://46.61.160.6:4567";//85.175.232.186:4567
     public BoilersDataService(WebClient.Builder webClientBuilder) {
         for (int i = 0; i < BOILERS_COUNT; i++) {
             Boiler boiler = new Boiler();
