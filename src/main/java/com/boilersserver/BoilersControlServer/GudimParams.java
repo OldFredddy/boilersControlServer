@@ -19,6 +19,7 @@ public class GudimParams {
     @Setter private String inTownFlow;
     @Setter private long version;
     @Setter private long lastUpdated;
+    @Setter private String tUlica;
     public void setIsOk(int isOk, long newVersion) {
         if (newVersion > this.version) {
             this.isOk = isOk;

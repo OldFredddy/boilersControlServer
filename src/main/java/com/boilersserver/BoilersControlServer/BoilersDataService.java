@@ -13,7 +13,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
-
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +20,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 public class BoilersDataService {
-
     @Getter
     private List<Boiler> boilers = new ArrayList<>();
     @Getter

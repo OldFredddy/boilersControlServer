@@ -14,8 +14,10 @@ public class RESTController {
     private final TelegramService telegramService;
     private final BoilersDataService boilersDataService;
     private final TemperatureCorrections temperatureCorrections;
+    private final GudimDataService gudimDataService;
     @Autowired
-    public RESTController(TelegramService telegramService, BoilersDataService boilersDataService,TemperatureCorrections temperatureCorrections) {
+    public RESTController(TelegramService telegramService, BoilersDataService boilersDataService,TemperatureCorrections temperatureCorrections, GudimDataService gudimDataService) {
+        this.gudimDataService = gudimDataService;
         this.telegramService = telegramService;
         this.boilersDataService = boilersDataService;
         this.temperatureCorrections = temperatureCorrections;
@@ -63,6 +65,16 @@ public class RESTController {
             }
             telegramService.resetError();
             return "Успех!";
+        } catch (Exception e) {
+            return "Error: " + e.getMessage();
+        }
+    }
+    @CrossOrigin(origins = "*")
+    @PostMapping("/setGudimParams")
+    public String setGudimParams(@RequestBody GudimParams gudimParams) {
+        try {
+            gudimDataService.refreshGudimData(gudimParams); //TODO Проверить, возможно json не десериализуется сам
+            return "Success";
         } catch (Exception e) {
             return "Error: " + e.getMessage();
         }

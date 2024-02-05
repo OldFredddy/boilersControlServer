@@ -76,6 +76,7 @@ public class TelegramService extends TelegramLongPollingBot {
     private static final long LONG_LONG_SLEEP_TIME = 4500L;
     private static final long SHORT_SLEEP_TIME = 2800L;
     private volatile BoilersDataService boilersDataService;
+    private volatile GudimDataService gudimDataService;
     private volatile BoilerLoggingService boilerLoggingService;
     private TemperatureMonitor temperatureMonitor = new TemperatureMonitor();
     Tokens tokens;
@@ -83,11 +84,12 @@ public class TelegramService extends TelegramLongPollingBot {
     double currentPpodLow;
 
     @Autowired
-    public TelegramService(BoilersDataService boilersDataService, Tokens tokens, Graphics graphics, BoilerLoggingService boilerLoggingService)  {
+    public TelegramService(BoilersDataService boilersDataService, Tokens tokens, Graphics graphics, BoilerLoggingService boilerLoggingService, GudimDataService gudimDataService)  {
         this.boilersDataService = boilersDataService;
         this.tokens = tokens;
         this.graphics=graphics;
         this.boilerLoggingService=boilerLoggingService;
+        this.gudimDataService=gudimDataService;
     }
     AtomicBoolean[] flagSilentReset = new AtomicBoolean[14];
     @PostConstruct
@@ -95,7 +97,7 @@ public class TelegramService extends TelegramLongPollingBot {
         try {
             TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
             botsApi.registerBot(this);
-            System.out.println("Бот запущен!");
+            System.out.println("Bot started");
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
@@ -112,7 +114,7 @@ public class TelegramService extends TelegramLongPollingBot {
         }
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId("@BoilersAnadyr");
-        sendMessage.setText(getCurrentParamsText(errorsArray));
+        sendMessage.setText(getBoilersParamsText(errorsArray)+"\n"+getGudimParamsTable1(gudimDataService.getGudimParams()));
         sendMessage.setParseMode("Markdown");
         try {
             Message message = execute(sendMessage);
@@ -137,7 +139,7 @@ public class TelegramService extends TelegramLongPollingBot {
                     LocalTime timePlusNine = currentTime.plusHours(9);
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
                     String formattedTime = timePlusNine.format(formatter);
-                    sendMessage.setText(formattedTime+"\n"+getCurrentParamsText(errorsArray));
+                    sendMessage.setText(formattedTime+"\n"+ getBoilersParamsText(errorsArray)+"\n"+getGudimParamsTable1(gudimDataService.getGudimParams()));
                     sendMessage.setParseMode("Markdown");
                     Message message = execute(sendMessage);
                     Thread.sleep(LONG_SLEEP_TIME);
@@ -192,7 +194,7 @@ public class TelegramService extends TelegramLongPollingBot {
                 } catch (InterruptedException e) {
                     continue;
                 }
-                refreshMessage(getCurrentParamsText(errorsArray));
+                refreshMessage(getBoilersParamsText(errorsArray)+"\n"+getGudimParamsTable1(gudimDataService.getGudimParams()));
                 Thread.sleep(SLEEP_TIME);                                    //блок проверки аварий
                 for (int i = 0; i < boilersDataService.getBoilers().size(); i++) {
                        Boiler boiler = boilersDataService.getBoilers().get(i);
@@ -298,7 +300,7 @@ public class TelegramService extends TelegramLongPollingBot {
             }
         }
     }
-    public String getCurrentParamsText(boolean[] errorsArray) {
+    public String getBoilersParamsText(boolean[] errorsArray) {
         StringBuilder result = new StringBuilder();
         String[] tPod = new String[boilersDataService.getBoilers().size()];
         String[] pVx = new String[boilersDataService.getBoilers().size()];
@@ -345,17 +347,14 @@ public class TelegramService extends TelegramLongPollingBot {
         StringBuilder table = new StringBuilder();
         // Определение формата строки таблицы
         String rowFormat = "| %-11s | %-6s | %-11s | %-6s | %-7s |\n";
-
         // Добавление заголовка таблицы
         table.append(String.format(rowFormat, "Имя", "Тпод", "Ур. воды", "Расход", "Статус"));
-
         // Формирование строк таблицы для каждого параметра
         table.append(String.format(rowFormat, "Ск.1", gudimParams.getWell1Tpod(), "", "", getStatusEmoji(gudimParams.getIsOk())));
         table.append(String.format(rowFormat, "Ск.2", gudimParams.getWell2Tpod(), "", "", getStatusEmoji(gudimParams.getIsOk())));
         table.append(String.format(rowFormat, "Резервуар 1", gudimParams.getReserv1Tpod(), gudimParams.getReserv1Lvl(), "", getStatusEmoji(gudimParams.getIsOk())));
         table.append(String.format(rowFormat, "Резервуар 2", gudimParams.getReserv2Tpod(), gudimParams.getReserv2Lvl(), "", getStatusEmoji(gudimParams.getIsOk())));
         table.append(String.format(rowFormat, "В город", gudimParams.getInTownTpod(), "", gudimParams.getInTownFlow(), getStatusEmoji(gudimParams.getIsOk())));
-
         return table.toString();
     }
 
@@ -370,7 +369,6 @@ public class TelegramService extends TelegramLongPollingBot {
                 {"Резервуар 2", gudimParams.getReserv2Tpod(), gudimParams.getReserv2Lvl(), "", getStatusEmoji(gudimParams.getIsOk())},
                 {"В город", gudimParams.getInTownTpod(), "", gudimParams.getInTownFlow(), getStatusEmoji(gudimParams.getIsOk())}
         };
-
         // Определение максимальной длины для каждого столбца
         int[] maxLengths = new int[5];
         for (Object[] row : rows) {
@@ -378,7 +376,6 @@ public class TelegramService extends TelegramLongPollingBot {
                 maxLengths[i] = Math.max(maxLengths[i], row[i].toString().length());
             }
         }
-
         // Установка формата строки с учетом максимальных длин
         String format = "| %-" + (maxLengths[0] + 2) + "s| %-" + (maxLengths[1] + 2) + "s| %-" + (maxLengths[2] + 2) +
                 "s| %-" + (maxLengths[3] + 2) + "s| %-" + (maxLengths[4] + 1) + "s |\n";
@@ -390,7 +387,6 @@ public class TelegramService extends TelegramLongPollingBot {
         for (Object[] row : rows) {
             result.append(String.format(format, row));
         }
-
         return result.toString();
     }
 
