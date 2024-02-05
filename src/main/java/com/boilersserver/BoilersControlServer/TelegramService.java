@@ -106,9 +106,9 @@ public class TelegramService extends TelegramLongPollingBot {
            timer.cancel();
             System.out.println("ShutdownHook executed");
         }));
-       //clientsId.add(6290939545L);//TODO enter by xml or smth else
+       clientsId.add(6290939545L);//TODO enter by xml or smth else
        clientsId.add(1102774002L);
-     //  clientsId.add(6588122746L);
+      clientsId.add(6588122746L);
 
         for (int i = 0; i < flagSilentReset.length; i++) {
             flagSilentReset[i] = new AtomicBoolean(false);
@@ -347,9 +347,15 @@ public class TelegramService extends TelegramLongPollingBot {
 
     public String getGudimParamsTable1(GudimParams gudimParams) {
         StringBuilder result = new StringBuilder();
-        result.append("Насосная Гудым\n");
+        result.append("Насосная станция первого подъема - Гудым\n");
+        if (gudimParams.getStreet()!="5"){
+            result.append("Температура воздуха: "+gudimParams.getStreet()+"°C"+"\n");
+        } else {
+            result.append("Температура воздуха: "+boilersDataService.getBoilers().get(2).getTUlica()+"°C"+"\n");
+        }
+
         // Заголовки для таблицы
-        String[] headers = {"Имя", "Тпод", "Ур. воды", "Расход", "Статус"};
+        String[] headers = {"Имя", "Тпод", "Ур. воды", "Расх", "S"};
         // Данные для таблицы
         Object[][] rows = {
                 {"Ск.1", gudimParams.getWell1Tpod(), "", "", getStatusEmoji(gudimParams.getIsOk())},
@@ -358,7 +364,6 @@ public class TelegramService extends TelegramLongPollingBot {
                 {"Рез. 2", gudimParams.getReserv2Tpod(), gudimParams.getReserv2Lvl(), "", getStatusEmoji(gudimParams.getIsOk())},
                 {"В гор.", gudimParams.getInTownTpod(), "", gudimParams.getInTownFlow(), getStatusEmoji(gudimParams.getIsOk())}
         };
-
         // Вычисляем максимальную ширину для каждого столбца
         int[] maxLengths = new int[headers.length];
         for (int i = 0; i < headers.length; i++) {
@@ -369,39 +374,35 @@ public class TelegramService extends TelegramLongPollingBot {
                 }
             }
         }
-
         // Формируем строку формата на основе вычисленных ширин
         String format = "";
-        for (int maxLength : maxLengths) {
-            // Добавляем 2 пробела для отступов внутри ячеек
-            int padding = 0;
-            int widthWithPadding = maxLength + padding;
-            format += "| %" + "-" + widthWithPadding + "s ";
+        for (int i = 0; i < maxLengths.length; i++) {
+            // Добавляем логику центрирования без добавления дополнительных отступов
+            format += "| %-" + maxLengths[i] + "s ";
         }
-        format += "\n";
+        format += "|\n";
 
         // Формируем заголовок таблицы
         result.append(String.format(format, (Object[]) headers));
-
-        // Формируем строки таблицы
+        String units = String.format(format, "", "°C", "м", "м3/ч", "");
+        result.append(units);
+        // Формируем строки таблицы с учетом центрирования
         for (Object[] row : rows) {
             for (int i = 0; i < row.length; i++) {
-                // Центрирование для значений ячеек
-                int cellWidth = maxLengths[i] + 2; // учёт отступов
+                // Центрирование содержимого каждой ячейки
                 String cellValue = (row[i] != null) ? row[i].toString() : "";
-                int paddingSize = (cellWidth - cellValue.length()) / 2;
-                String padding = " ".repeat(paddingSize);
-                row[i] = padding + cellValue + padding;
-                // Дополнительный пробел, если длина ячейки нечетная
-                if (cellValue.length() % 2 == 1) {
-                    row[i] += " ";
-                }
+                int spaceToAdd = maxLengths[i] - cellValue.length();
+                int paddingBefore = spaceToAdd / 2;
+                int paddingAfter = spaceToAdd - paddingBefore;
+                String formatValue = " ".repeat(paddingBefore) + cellValue + " ".repeat(paddingAfter);
+                row[i] = formatValue;
             }
             result.append(String.format(format, row));
         }
         result.append("```\n");
         return result.toString();
     }
+
 
     private String getStatusEmoji(int status) {
         switch (status) {
