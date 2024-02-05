@@ -38,7 +38,8 @@ public class GudimDataService {
             gudimParams1.setReserv2Tpod("99");
             gudimParams1.setWell1Tpod("99");
             gudimParams1.setWell2Tpod("99");
-            gudimParams1.setTUlica("5");
+            gudimParams1.setStreet("5");
+            gudimParams1.setInTownFlow("20");
             gudimParams=gudimParams1;
     }
     @PreDestroy

@@ -106,8 +106,9 @@ public class TelegramService extends TelegramLongPollingBot {
            timer.cancel();
             System.out.println("ShutdownHook executed");
         }));
-        clientsId.add(6290939545L);//TODO enter by xml or smth else
-        clientsId.add(1102774002L);
+       //clientsId.add(6290939545L);//TODO enter by xml or smth else
+       clientsId.add(1102774002L);
+     //  clientsId.add(6588122746L);
 
         for (int i = 0; i < flagSilentReset.length; i++) {
             flagSilentReset[i] = new AtomicBoolean(false);
@@ -340,53 +341,65 @@ public class TelegramService extends TelegramLongPollingBot {
             String formattedRow = String.format(format, (i + 1), data[0][i] == null ? "" : data[0][i], data[1][i] == null ? "" : data[1][i], data[2][i] == null ? "" : data[2][i], emoji);
             result.append(formattedRow);
         }
-        result.append("```\n");
+
         return result.toString();
-    }
-    public String getGudimParamsTable(GudimParams gudimParams) {
-        StringBuilder table = new StringBuilder();
-        // Определение формата строки таблицы
-        String rowFormat = "| %-11s | %-6s | %-11s | %-6s | %-7s |\n";
-        // Добавление заголовка таблицы
-        table.append(String.format(rowFormat, "Имя", "Тпод", "Ур. воды", "Расход", "Статус"));
-        // Формирование строк таблицы для каждого параметра
-        table.append(String.format(rowFormat, "Ск.1", gudimParams.getWell1Tpod(), "", "", getStatusEmoji(gudimParams.getIsOk())));
-        table.append(String.format(rowFormat, "Ск.2", gudimParams.getWell2Tpod(), "", "", getStatusEmoji(gudimParams.getIsOk())));
-        table.append(String.format(rowFormat, "Резервуар 1", gudimParams.getReserv1Tpod(), gudimParams.getReserv1Lvl(), "", getStatusEmoji(gudimParams.getIsOk())));
-        table.append(String.format(rowFormat, "Резервуар 2", gudimParams.getReserv2Tpod(), gudimParams.getReserv2Lvl(), "", getStatusEmoji(gudimParams.getIsOk())));
-        table.append(String.format(rowFormat, "В город", gudimParams.getInTownTpod(), "", gudimParams.getInTownFlow(), getStatusEmoji(gudimParams.getIsOk())));
-        return table.toString();
     }
 
     public String getGudimParamsTable1(GudimParams gudimParams) {
-        // Используем StringBuilder для построения результата
         StringBuilder result = new StringBuilder();
+        result.append("Насосная Гудым\n");
+        // Заголовки для таблицы
+        String[] headers = {"Имя", "Тпод", "Ур. воды", "Расход", "Статус"};
         // Данные для таблицы
         Object[][] rows = {
                 {"Ск.1", gudimParams.getWell1Tpod(), "", "", getStatusEmoji(gudimParams.getIsOk())},
                 {"Ск.2", gudimParams.getWell2Tpod(), "", "", getStatusEmoji(gudimParams.getIsOk())},
-                {"Резервуар 1", gudimParams.getReserv1Tpod(), gudimParams.getReserv1Lvl(), "", getStatusEmoji(gudimParams.getIsOk())},
-                {"Резервуар 2", gudimParams.getReserv2Tpod(), gudimParams.getReserv2Lvl(), "", getStatusEmoji(gudimParams.getIsOk())},
-                {"В город", gudimParams.getInTownTpod(), "", gudimParams.getInTownFlow(), getStatusEmoji(gudimParams.getIsOk())}
+                {"Рез. 1", gudimParams.getReserv1Tpod(), gudimParams.getReserv1Lvl(), "", getStatusEmoji(gudimParams.getIsOk())},
+                {"Рез. 2", gudimParams.getReserv2Tpod(), gudimParams.getReserv2Lvl(), "", getStatusEmoji(gudimParams.getIsOk())},
+                {"В гор.", gudimParams.getInTownTpod(), "", gudimParams.getInTownFlow(), getStatusEmoji(gudimParams.getIsOk())}
         };
-        // Определение максимальной длины для каждого столбца
-        int[] maxLengths = new int[5];
-        for (Object[] row : rows) {
-            for (int i = 0; i < row.length; i++) {
-                maxLengths[i] = Math.max(maxLengths[i], row[i].toString().length());
+
+        // Вычисляем максимальную ширину для каждого столбца
+        int[] maxLengths = new int[headers.length];
+        for (int i = 0; i < headers.length; i++) {
+            maxLengths[i] = headers[i].length(); // начальное значение - длина заголовка
+            for (Object[] row : rows) {
+                if (row[i] != null) {
+                    maxLengths[i] = Math.max(maxLengths[i], row[i].toString().length());
+                }
             }
         }
-        // Установка формата строки с учетом максимальных длин
-        String format = "| %-" + (maxLengths[0] + 2) + "s| %-" + (maxLengths[1] + 2) + "s| %-" + (maxLengths[2] + 2) +
-                "s| %-" + (maxLengths[3] + 2) + "s| %-" + (maxLengths[4] + 1) + "s |\n";
 
-        // Добавление заголовка таблицы
-        result.append(String.format(format, "Имя", "Тпод", "Ур. воды", "Расход", "Статус"));
+        // Формируем строку формата на основе вычисленных ширин
+        String format = "";
+        for (int maxLength : maxLengths) {
+            // Добавляем 2 пробела для отступов внутри ячеек
+            int padding = 0;
+            int widthWithPadding = maxLength + padding;
+            format += "| %" + "-" + widthWithPadding + "s ";
+        }
+        format += "\n";
 
-        // Добавление строк таблицы
+        // Формируем заголовок таблицы
+        result.append(String.format(format, (Object[]) headers));
+
+        // Формируем строки таблицы
         for (Object[] row : rows) {
+            for (int i = 0; i < row.length; i++) {
+                // Центрирование для значений ячеек
+                int cellWidth = maxLengths[i] + 2; // учёт отступов
+                String cellValue = (row[i] != null) ? row[i].toString() : "";
+                int paddingSize = (cellWidth - cellValue.length()) / 2;
+                String padding = " ".repeat(paddingSize);
+                row[i] = padding + cellValue + padding;
+                // Дополнительный пробел, если длина ячейки нечетная
+                if (cellValue.length() % 2 == 1) {
+                    row[i] += " ";
+                }
+            }
             result.append(String.format(format, row));
         }
+        result.append("```\n");
         return result.toString();
     }
 
