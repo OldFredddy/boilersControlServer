@@ -1,22 +1,11 @@
-package com.boilersserver.BoilersControlServer;
+package com.boilersserver.BoilersControlServer.services;
 
-import com.google.gson.Gson;
+import com.boilersserver.BoilersControlServer.entities.GudimParams;
 import jakarta.annotation.PreDestroy;
 import lombok.Getter;
-import lombok.Setter;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
-import reactor.netty.http.client.HttpClient;
-import reactor.netty.resources.ConnectionProvider;
 
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
@@ -48,7 +37,7 @@ public class GudimDataService {
     }
     public boolean forFirstStart = true;
 
-    public void refreshGudimData(GudimParams gudimParams){
+    public void refreshData(GudimParams gudimParams){
         this.gudimParams=gudimParams;
     }
 }

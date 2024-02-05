@@ -1,12 +1,10 @@
-package com.boilersserver.BoilersControlServer;
+package com.boilersserver.BoilersControlServer.utils;
+import com.boilersserver.BoilersControlServer.entities.Boiler;
 import de.erichseifert.gral.data.DataTable;
-import de.erichseifert.gral.graphics.Label;
 import de.erichseifert.gral.plots.XYPlot;
 import de.erichseifert.gral.plots.axes.AxisRenderer;
 import de.erichseifert.gral.plots.axes.LinearRenderer2D;
-import de.erichseifert.gral.plots.lines.AbstractLineRenderer2D;
 import de.erichseifert.gral.plots.lines.LineRenderer;
-import de.erichseifert.gral.plots.lines.DefaultLineRenderer2D;
 import de.erichseifert.gral.graphics.Insets2D;
 import de.erichseifert.gral.graphics.DrawingContext;
 import java.awt.*;

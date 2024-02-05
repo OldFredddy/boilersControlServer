@@ -1,10 +1,10 @@
-package com.boilersserver.BoilersControlServer;
+package com.boilersserver.BoilersControlServer.utils;
 
+import com.boilersserver.BoilersControlServer.entities.Boiler;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalTime;
-import java.util.LinkedList;
 
 public class TemperatureMonitor {
     private static final int BOILER_MAKATROVYH=-6;

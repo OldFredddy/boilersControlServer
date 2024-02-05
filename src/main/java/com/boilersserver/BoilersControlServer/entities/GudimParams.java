@@ -1,4 +1,4 @@
-package com.boilersserver.BoilersControlServer;
+package com.boilersserver.BoilersControlServer.entities;
 
 import lombok.Getter;
 import lombok.Setter;

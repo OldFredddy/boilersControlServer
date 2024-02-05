@@ -1,7 +1,8 @@
 package com.boilersserver.BoilersControlServer;
 
-import static org.mockito.Mockito.*;
-
+import com.boilersserver.BoilersControlServer.services.BoilersDataService;
+import com.boilersserver.BoilersControlServer.services.TelegramService;
+import com.boilersserver.BoilersControlServer.utils.HangCatcher;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -12,9 +13,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
 class HangCatcherTest {

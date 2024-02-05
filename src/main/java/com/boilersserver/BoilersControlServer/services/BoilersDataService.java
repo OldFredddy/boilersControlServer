@@ -1,11 +1,11 @@
-package com.boilersserver.BoilersControlServer;
+package com.boilersserver.BoilersControlServer.services;
 
+import com.boilersserver.BoilersControlServer.utils.JsonMapper;
+import com.boilersserver.BoilersControlServer.entities.Boiler;
+import com.boilersserver.BoilersControlServer.entities.TemperatureCorrections;
 import com.google.gson.Gson;
 import jakarta.annotation.PreDestroy;
 import lombok.Getter;
-import lombok.Setter;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;

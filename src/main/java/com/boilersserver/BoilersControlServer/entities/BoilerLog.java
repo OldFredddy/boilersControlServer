@@ -1,5 +1,6 @@
-package com.boilersserver.BoilersControlServer;
+package com.boilersserver.BoilersControlServer.entities;
 
+import com.boilersserver.BoilersControlServer.entities.Boiler;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;

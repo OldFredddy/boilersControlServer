@@ -1,4 +1,4 @@
-package com.boilersserver.BoilersControlServer;
+package com.boilersserver.BoilersControlServer.utils;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;

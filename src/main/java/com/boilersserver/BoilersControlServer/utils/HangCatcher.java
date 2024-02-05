@@ -1,5 +1,8 @@
-package com.boilersserver.BoilersControlServer;
+package com.boilersserver.BoilersControlServer.utils;
 
+import com.boilersserver.BoilersControlServer.entities.Boiler;
+import com.boilersserver.BoilersControlServer.services.BoilersDataService;
+import com.boilersserver.BoilersControlServer.services.TelegramService;
 import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;

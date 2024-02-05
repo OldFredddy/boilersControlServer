@@ -1,5 +1,9 @@
-package com.boilersserver.BoilersControlServer;
+package com.boilersserver.BoilersControlServer.utils;
 
+import com.boilersserver.BoilersControlServer.entities.Boiler;
+import com.boilersserver.BoilersControlServer.entities.GudimParams;
+import com.boilersserver.BoilersControlServer.entities.PumpStation;
+import com.boilersserver.BoilersControlServer.entities.TemperatureCorrections;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;

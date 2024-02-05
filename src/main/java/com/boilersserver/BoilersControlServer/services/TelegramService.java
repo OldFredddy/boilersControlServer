@@ -1,6 +1,10 @@
-package com.boilersserver.BoilersControlServer;
+package com.boilersserver.BoilersControlServer.services;
 
 
+import com.boilersserver.BoilersControlServer.entities.*;
+import com.boilersserver.BoilersControlServer.utils.Graphics;
+import com.boilersserver.BoilersControlServer.utils.TemperatureMonitor;
+import com.boilersserver.BoilersControlServer.utils.ZvonokPostService;
 import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,6 +81,7 @@ public class TelegramService extends TelegramLongPollingBot {
     private static final long SHORT_SLEEP_TIME = 2800L;
     private volatile BoilersDataService boilersDataService;
     private volatile GudimDataService gudimDataService;
+    private volatile PumpStationDataService pumpStationDataService;
     private volatile BoilerLoggingService boilerLoggingService;
     private TemperatureMonitor temperatureMonitor = new TemperatureMonitor();
     Tokens tokens;
@@ -84,12 +89,15 @@ public class TelegramService extends TelegramLongPollingBot {
     double currentPpodLow;
 
     @Autowired
-    public TelegramService(BoilersDataService boilersDataService, Tokens tokens, Graphics graphics, BoilerLoggingService boilerLoggingService, GudimDataService gudimDataService)  {
+    public TelegramService(BoilersDataService boilersDataService, Tokens tokens, Graphics graphics,
+                           BoilerLoggingService boilerLoggingService, GudimDataService gudimDataService,
+                           PumpStationDataService pumpStationDataService)  {
         this.boilersDataService = boilersDataService;
         this.tokens = tokens;
         this.graphics=graphics;
         this.boilerLoggingService=boilerLoggingService;
         this.gudimDataService=gudimDataService;
+        this.pumpStationDataService=pumpStationDataService;
     }
     AtomicBoolean[] flagSilentReset = new AtomicBoolean[14];
     @PostConstruct
@@ -108,14 +116,15 @@ public class TelegramService extends TelegramLongPollingBot {
         }));
        clientsId.add(6290939545L);//TODO enter by xml or smth else
        clientsId.add(1102774002L);
-      clientsId.add(6588122746L);
-
+       clientsId.add(6588122746L);
         for (int i = 0; i < flagSilentReset.length; i++) {
             flagSilentReset[i] = new AtomicBoolean(false);
         }
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId("@BoilersAnadyr");
-        sendMessage.setText(getBoilersParamsText(errorsArray)+"\n"+getGudimParamsTable1(gudimDataService.getGudimParams()));
+        sendMessage.setText(getBoilersParamsText(errorsArray)+"\n"+
+                getGudimParamsTable1(gudimDataService.getGudimParams())+"\n"+
+                getPumpStationTableView(pumpStationDataService.getPumpStation()));
         sendMessage.setParseMode("Markdown");
         try {
             Message message = execute(sendMessage);
@@ -140,7 +149,9 @@ public class TelegramService extends TelegramLongPollingBot {
                     LocalTime timePlusNine = currentTime.plusHours(9);
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
                     String formattedTime = timePlusNine.format(formatter);
-                    sendMessage.setText(formattedTime+"\n"+ getBoilersParamsText(errorsArray)+"\n"+getGudimParamsTable1(gudimDataService.getGudimParams()));
+                    sendMessage.setText(formattedTime+"\n"+ getBoilersParamsText(errorsArray)+"\n"+
+                            getGudimParamsTable1(gudimDataService.getGudimParams())+"\n"+
+                            getPumpStationTableView(pumpStationDataService.getPumpStation()));
                     sendMessage.setParseMode("Markdown");
                     Message message = execute(sendMessage);
                     Thread.sleep(LONG_SLEEP_TIME);
@@ -168,24 +179,6 @@ public class TelegramService extends TelegramLongPollingBot {
             }
         }, 32  * 1000, 37  * 1000);
     }
-    @Override
-    public String getBotUsername() {
-        return "@BoilerControlAN_bot";
-    }
-    @Override
-    public String getBotToken() {
-        return tokens.getKey1();
-    }
-    public void stop() {
-        timer.cancel();
-        monitorThread2.interrupt();
-        timer=null;
-        timerSilintReset.cancel();
-        timerSilintReset=null;
-        pressureMonitor.interrupt();
-        monitorThread2=null;
-        System.gc();
-    }
 
     Thread monitorThread2 = new Thread(()->{
         while (keepRunning){
@@ -195,7 +188,10 @@ public class TelegramService extends TelegramLongPollingBot {
                 } catch (InterruptedException e) {
                     continue;
                 }
-                refreshMessage(getBoilersParamsText(errorsArray)+"\n"+getGudimParamsTable1(gudimDataService.getGudimParams()));
+                refreshMessage(getBoilersParamsText(errorsArray)+"\n"+
+                        getGudimParamsTable1(gudimDataService.getGudimParams())+"\n"+
+                        getPumpStationTableView(pumpStationDataService.getPumpStation()));
+
                 Thread.sleep(SLEEP_TIME);                                    //блок проверки аварий
                 for (int i = 0; i < boilersDataService.getBoilers().size(); i++) {
                        Boiler boiler = boilersDataService.getBoilers().get(i);
@@ -347,7 +343,7 @@ public class TelegramService extends TelegramLongPollingBot {
 
     public String getGudimParamsTable1(GudimParams gudimParams) {
         StringBuilder result = new StringBuilder();
-        result.append("Насосная станция первого подъема - Гудым\n");
+        result.append("Насосная ст. 1-го подъема - Гудым\n");
         if (gudimParams.getStreet()!="5"){
             result.append("Температура воздуха: "+gudimParams.getStreet()+"°C"+"\n");
         } else {
@@ -380,7 +376,65 @@ public class TelegramService extends TelegramLongPollingBot {
             // Добавляем логику центрирования без добавления дополнительных отступов
             format += "| %-" + maxLengths[i] + "s ";
         }
-        format += "|\n";
+        format += "\n";
+
+        // Формируем заголовок таблицы
+        result.append(String.format(format, (Object[]) headers));
+        String units = String.format(format, "", "°C", "м", "м3/ч", "");
+        result.append(units);
+        // Формируем строки таблицы с учетом центрирования
+        for (Object[] row : rows) {
+            for (int i = 0; i < row.length; i++) {
+                // Центрирование содержимого каждой ячейки
+                String cellValue = (row[i] != null) ? row[i].toString() : "";
+                int spaceToAdd = maxLengths[i] - cellValue.length();
+                int paddingBefore = spaceToAdd / 2;
+                int paddingAfter = spaceToAdd - paddingBefore;
+                String formatValue = " ".repeat(paddingBefore) + cellValue + " ".repeat(paddingAfter);
+                row[i] = formatValue;
+            }
+            result.append(String.format(format, row));
+        }
+        result.append("\n");
+        return result.toString();
+    }
+    public String getPumpStationTableView(PumpStation pumpStation) {
+        StringBuilder result = new StringBuilder();
+        result.append("Насосная ст. 3-го подъема - У.Копи\n");
+        if (pumpStation.getStreet()!="5"){
+            result.append("Температура воздуха: "+pumpStation.getStreet()+"°C"+"\n");
+        } else {
+            result.append("Температура воздуха: "+boilersDataService.getBoilers().get(2).getTUlica()+"°C"+"\n");
+        }
+        String[] headers = {"***", "Тпод", "Ур. воды", "Расх", "S"};
+        // Данные для таблицы
+        Object[][] rows = {
+                {"В гор.", "", "" , pumpStation.getForCityFlow(), getStatusEmoji(pumpStation.getIsOk())},
+                {"Приход", pumpStation.getFromPumpStationTpod(), "", "", getStatusEmoji(pumpStation.getIsOk())},
+                {"Рез. 1", pumpStation.getReserv1Tpod(), pumpStation.getReserv1Lvl(), "", getStatusEmoji(pumpStation.getIsOk())},
+                {"Рез. 2", pumpStation.getReserv2Tpod(), pumpStation.getReserv2Lvl(), "", getStatusEmoji(pumpStation.getIsOk())},
+                {"Д.1", pumpStation.getMagicIndicator1(), "", "", getStatusEmoji(pumpStation.getIsOk())},
+                {"Д.2", pumpStation.getMagicIndicator2(), "", "", getStatusEmoji(pumpStation.getIsOk())},
+                {"Д.3", pumpStation.getMagicIndicator3(), "", "", getStatusEmoji(pumpStation.getIsOk())},
+                {"Д.4", pumpStation.getMagicIndicator4(), "", "", getStatusEmoji(pumpStation.getIsOk())}
+        };
+        // Вычисляем максимальную ширину для каждого столбца
+        int[] maxLengths = new int[headers.length];
+        for (int i = 0; i < headers.length; i++) {
+            maxLengths[i] = headers[i].length(); // начальное значение - длина заголовка
+            for (Object[] row : rows) {
+                if (row[i] != null) {
+                    maxLengths[i] = Math.max(maxLengths[i], row[i].toString().length());
+                }
+            }
+        }
+        // Формируем строку формата на основе вычисленных ширин
+        String format = "";
+        for (int i = 0; i < maxLengths.length; i++) {
+            // Добавляем логику центрирования без добавления дополнительных отступов
+            format += "| %-" + maxLengths[i] + "s ";
+        }
+        format += "\n";
 
         // Формируем заголовок таблицы
         result.append(String.format(format, (Object[]) headers));
@@ -402,7 +456,6 @@ public class TelegramService extends TelegramLongPollingBot {
         result.append("```\n");
         return result.toString();
     }
-
 
     private String getStatusEmoji(int status) {
         switch (status) {
@@ -728,6 +781,23 @@ public class TelegramService extends TelegramLongPollingBot {
         }
         checkForAvary=true;
     }
-
+    @Override
+    public String getBotUsername() {
+        return "@BoilerControlAN_bot";
+    }
+    @Override
+    public String getBotToken() {
+        return tokens.getKey1();
+    }
+    public void stop() {
+        timer.cancel();
+        monitorThread2.interrupt();
+        timer=null;
+        timerSilintReset.cancel();
+        timerSilintReset=null;
+        pressureMonitor.interrupt();
+        monitorThread2=null;
+        System.gc();
+    }
 }
 
