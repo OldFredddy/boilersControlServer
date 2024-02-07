@@ -26,10 +26,10 @@ public class PumpStationDataService {
             pumpStation1.setReserv1Tpod("99");
             pumpStation1.setReserv2Tpod("99");
             pumpStation1.setStreet("5");
-            pumpStation1.setMagicIndicator1("99");
-            pumpStation1.setMagicIndicator1("99");
-            pumpStation1.setMagicIndicator1("99");
-            pumpStation1.setMagicIndicator1("99");
+            pumpStation1.setMagicIndicator1("5");
+            pumpStation1.setMagicIndicator1("10");
+            pumpStation1.setMagicIndicator1("15");
+            pumpStation1.setMagicIndicator1("20");
             pumpStation=pumpStation1;
     }
     @PreDestroy

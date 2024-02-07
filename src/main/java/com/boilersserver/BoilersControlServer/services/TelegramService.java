@@ -349,10 +349,7 @@ public class TelegramService extends TelegramLongPollingBot {
         } else {
             result.append("Температура воздуха: "+boilersDataService.getBoilers().get(2).getTUlica()+"°C"+"\n");
         }
-
-        // Заголовки для таблицы
         String[] headers = {"Имя", "Тпод", "Ур. воды", "Расх", "S"};
-        // Данные для таблицы
         Object[][] rows = {
                 {"Ск.1", gudimParams.getWell1Tpod(), "", "", getStatusEmoji(gudimParams.getIsOk())},
                 {"Ск.2", gudimParams.getWell2Tpod(), "", "", getStatusEmoji(gudimParams.getIsOk())},
@@ -360,7 +357,6 @@ public class TelegramService extends TelegramLongPollingBot {
                 {"Рез. 2", gudimParams.getReserv2Tpod(), gudimParams.getReserv2Lvl(), "", getStatusEmoji(gudimParams.getIsOk())},
                 {"В гор.", gudimParams.getInTownTpod(), "", gudimParams.getInTownFlow(), getStatusEmoji(gudimParams.getIsOk())}
         };
-        // Вычисляем максимальную ширину для каждого столбца
         int[] maxLengths = new int[headers.length];
         for (int i = 0; i < headers.length; i++) {
             maxLengths[i] = headers[i].length(); // начальное значение - длина заголовка
@@ -370,10 +366,8 @@ public class TelegramService extends TelegramLongPollingBot {
                 }
             }
         }
-        // Формируем строку формата на основе вычисленных ширин
         String format = "";
         for (int i = 0; i < maxLengths.length; i++) {
-            // Добавляем логику центрирования без добавления дополнительных отступов
             format += "| %-" + maxLengths[i] + "s ";
         }
         format += "\n";
@@ -390,7 +384,7 @@ public class TelegramService extends TelegramLongPollingBot {
                 int spaceToAdd = maxLengths[i] - cellValue.length();
                 int paddingBefore = spaceToAdd / 2;
                 int paddingAfter = spaceToAdd - paddingBefore;
-                String formatValue = " ".repeat(paddingBefore) + cellValue + " ".repeat(paddingAfter);
+                String formatValue = "".repeat(paddingBefore) + cellValue + "".repeat(paddingAfter);//TODO вот тут проследить за пробелами
                 row[i] = formatValue;
             }
             result.append(String.format(format, row));
@@ -407,7 +401,6 @@ public class TelegramService extends TelegramLongPollingBot {
             result.append("Температура воздуха: "+boilersDataService.getBoilers().get(2).getTUlica()+"°C"+"\n");
         }
         String[] headers = {"***", "Тпод", "Ур. воды", "Расх", "S"};
-        // Данные для таблицы
         Object[][] rows = {
                 {"В гор.", "", "" , pumpStation.getForCityFlow(), getStatusEmoji(pumpStation.getIsOk())},
                 {"Приход", pumpStation.getFromPumpStationTpod(), "", "", getStatusEmoji(pumpStation.getIsOk())},
@@ -418,7 +411,6 @@ public class TelegramService extends TelegramLongPollingBot {
                 {"Д.3", pumpStation.getMagicIndicator3(), "", "", getStatusEmoji(pumpStation.getIsOk())},
                 {"Д.4", pumpStation.getMagicIndicator4(), "", "", getStatusEmoji(pumpStation.getIsOk())}
         };
-        // Вычисляем максимальную ширину для каждого столбца
         int[] maxLengths = new int[headers.length];
         for (int i = 0; i < headers.length; i++) {
             maxLengths[i] = headers[i].length(); // начальное значение - длина заголовка
@@ -428,15 +420,12 @@ public class TelegramService extends TelegramLongPollingBot {
                 }
             }
         }
-        // Формируем строку формата на основе вычисленных ширин
         String format = "";
         for (int i = 0; i < maxLengths.length; i++) {
             // Добавляем логику центрирования без добавления дополнительных отступов
             format += "| %-" + maxLengths[i] + "s ";
         }
         format += "\n";
-
-        // Формируем заголовок таблицы
         result.append(String.format(format, (Object[]) headers));
         String units = String.format(format, "", "°C", "м", "м3/ч", "");
         result.append(units);
@@ -448,7 +437,7 @@ public class TelegramService extends TelegramLongPollingBot {
                 int spaceToAdd = maxLengths[i] - cellValue.length();
                 int paddingBefore = spaceToAdd / 2;
                 int paddingAfter = spaceToAdd - paddingBefore;
-                String formatValue = " ".repeat(paddingBefore) + cellValue + " ".repeat(paddingAfter);
+                String formatValue = "".repeat(paddingBefore) + cellValue + "".repeat(paddingAfter);//TODO вот тут проследить за пробелами
                 row[i] = formatValue;
             }
             result.append(String.format(format, row));
