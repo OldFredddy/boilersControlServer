@@ -39,6 +39,10 @@ public class PumpStationDataService {
     public boolean forFirstStart = true;
 
     public void refreshData(PumpStation pumpStation){
+        pumpStation.setMagicIndicator1("***");
+        pumpStation.setMagicIndicator2("***");
+        pumpStation.setMagicIndicator3("***");
+        pumpStation.setMagicIndicator4("***");
         this.pumpStation=pumpStation;
     }
 }

@@ -38,6 +38,9 @@ public class GudimDataService {
     public boolean forFirstStart = true;
 
     public void refreshData(GudimParams gudimParams){
+        gudimParams.setInTownFlow("***");
+        gudimParams.setWell2Tpod("***");
+        gudimParams.setReserv2Lvl("***");
         this.gudimParams=gudimParams;
     }
 }

@@ -116,7 +116,7 @@ public class TelegramService extends TelegramLongPollingBot {
         }));
        clientsId.add(6290939545L);//TODO enter by xml or smth else
        clientsId.add(1102774002L);
-       clientsId.add(6588122746L);
+       //clientsId.add(6588122746L);
         for (int i = 0; i < flagSilentReset.length; i++) {
             flagSilentReset[i] = new AtomicBoolean(false);
         }
@@ -349,7 +349,7 @@ public class TelegramService extends TelegramLongPollingBot {
         } else {
             result.append("Температура воздуха: "+boilersDataService.getBoilers().get(2).getTUlica()+"°C"+"\n");
         }
-        String[] headers = {"Имя", "Тпод", "Ур. воды", "Расх", "S"};
+        String[] headers = {"***", "Тпод", "Ур. воды", "Расх", "S"};
         Object[][] rows = {
                 {"Ск.1", gudimParams.getWell1Tpod(), "", "", getStatusEmoji(gudimParams.getIsOk())},
                 {"Ск.2", gudimParams.getWell2Tpod(), "", "", getStatusEmoji(gudimParams.getIsOk())},
@@ -389,7 +389,7 @@ public class TelegramService extends TelegramLongPollingBot {
             }
             result.append(String.format(format, row));
         }
-        result.append("\n");
+
         return result.toString();
     }
     public String getPumpStationTableView(PumpStation pumpStation) {
@@ -403,7 +403,7 @@ public class TelegramService extends TelegramLongPollingBot {
         String[] headers = {"***", "Тпод", "Ур. воды", "Расх", "S"};
         Object[][] rows = {
                 {"В гор.", "", "" , pumpStation.getForCityFlow(), getStatusEmoji(pumpStation.getIsOk())},
-                {"Приход", pumpStation.getFromPumpStationTpod(), "", "", getStatusEmoji(pumpStation.getIsOk())},
+                {"С Гудыма", pumpStation.getFromPumpStationTpod(), "", "", getStatusEmoji(pumpStation.getIsOk())},
                 {"Рез. 1", pumpStation.getReserv1Tpod(), pumpStation.getReserv1Lvl(), "", getStatusEmoji(pumpStation.getIsOk())},
                 {"Рез. 2", pumpStation.getReserv2Tpod(), pumpStation.getReserv2Lvl(), "", getStatusEmoji(pumpStation.getIsOk())},
                 {"Д.1", pumpStation.getMagicIndicator1(), "", "", getStatusEmoji(pumpStation.getIsOk())},
@@ -534,22 +534,12 @@ public class TelegramService extends TelegramLongPollingBot {
                 }
                 checkForAvary=true;
                 for (int i = 0; i < clientsId.size(); i++) {
-                    DeleteMessage deleteMessage = new DeleteMessage(String.valueOf(clientsId.get(i)),avaryMessageID[i]);
                     SendMessage message = new SendMessage(update.getCallbackQuery().getMessage().getChatId().toString(),"Готово");
                     try {
                         Message message2 = execute(message);
                         avary2MessageID[i]= message2.getMessageId();
                         Thread.sleep(LONG_SLEEP_TIME);
                     } catch (TelegramApiException | InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                    DeleteMessage deleteMessage1 = new DeleteMessage(String.valueOf(clientsId.get(i)),avary2MessageID[i]);
-                    DeleteMessage deleteMessage2 = new DeleteMessage(String.valueOf(clientsId.get(i)),avary3MessageID[i]);
-                    try {
-                        execute(deleteMessage2);
-                        execute(deleteMessage1);
-                        execute(deleteMessage);
-                    } catch (TelegramApiException e) {
                         throw new RuntimeException(e);
                     }
                 }
