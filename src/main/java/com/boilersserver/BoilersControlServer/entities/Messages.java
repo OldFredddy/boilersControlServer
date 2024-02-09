@@ -119,7 +119,7 @@ public class Messages {
         message.setReplyMarkup(inlineKeyboardMarkup);
         return message;
     }
-    public static InlineKeyboardMarkup controlKeyboardMarkup() {
+    public static InlineKeyboardMarkup controlKeyboardMarkup(boolean allowAlertForBoilers) {
       //  SendMessage message = new SendMessage();
       //  message.setChatId(chatId);
       //  message.setText("Выберите действие:");
@@ -129,6 +129,7 @@ public class Messages {
         List<InlineKeyboardButton> buttonList3 = new ArrayList<>();
         List<InlineKeyboardButton> buttonList4 = new ArrayList<>();
         List<InlineKeyboardButton> buttonList5 = new ArrayList<>();
+        List<InlineKeyboardButton> buttonList6 = new ArrayList<>();
         InlineKeyboardButton enableCallServiceButton = new InlineKeyboardButton();
         enableCallServiceButton.setText("Включить звонки");
         enableCallServiceButton.setCallbackData("enableCallService");
@@ -154,10 +155,26 @@ public class Messages {
         backButton.setText("↩️Назад");
         backButton.setCallbackData("goBack");
         backButtonRow.add(backButton);
+
         rowList.add(buttonList2);
         rowList.add(buttonList3);
         rowList.add(buttonList4);
         rowList.add(buttonList5);
+        if (allowAlertForBoilers){
+            List<InlineKeyboardButton> disableAlertsButtonRow = new ArrayList<>();
+            InlineKeyboardButton disableAlertsButton = new InlineKeyboardButton();
+            disableAlertsButton.setText("\uD83D\uDCF5Отключить уведомления");
+            disableAlertsButton.setCallbackData("disableAlerts=true");
+            disableAlertsButtonRow.add(disableAlertsButton);
+            rowList.add(disableAlertsButtonRow);
+        } else {
+            List<InlineKeyboardButton> disableAlertsButtonRow = new ArrayList<>();
+            InlineKeyboardButton disableAlertsButton = new InlineKeyboardButton();
+            disableAlertsButton.setText("\uD83D\uDE80Включить уведомления");
+            disableAlertsButton.setCallbackData("disableAlerts=false");
+            disableAlertsButtonRow.add(disableAlertsButton);
+            rowList.add(disableAlertsButtonRow);
+        }
         rowList.add(backButtonRow);
         inlineKeyboardMarkup.setKeyboard(rowList);
         // message.setReplyMarkup(inlineKeyboardMarkup);

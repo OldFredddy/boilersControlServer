@@ -66,6 +66,7 @@ public class TelegramService extends TelegramLongPollingBot {
     Integer[] avary2MessageID= new Integer[2];
     Integer[] avary3MessageID=new Integer[2];
     public boolean [] errorsArray = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};
+    public boolean [] disableAlertsBoilers = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};
     public boolean [] pressureErrorsArray = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};
     public boolean [] temperatureErrorsArray = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};
     static volatile Integer messageId = -1;
@@ -465,15 +466,18 @@ public class TelegramService extends TelegramLongPollingBot {
          String msgText=boilerNames[boilerIndex] + "\n" + "Аварийное значение!" + " Общие параметры на момент аварии:" + "\n"
                  + "\uD83D\uDD25 Температура уходящей воды: " + boilersDataService.getBoilers().get(boilerIndex).getTPod() + " °C" + "\n"
                  + "⚖️\uD83D\uDCA8 Давление в системе отопления: " + boilersDataService.getBoilers().get(boilerIndex).getPPod() + " МПа" + "\n" + comment;
-        for (int i = 0; i < clientsId.size() ; i++) {
-            SendMessage message1 = new SendMessage();
-            message1.setChatId(clientsId.get(i));      // чат id
-            message1.setText(msgText);
-            Message message = execute(message1);
-            avaryMessageID[i] = message.getMessageId();
-            Message message2 = execute(Messages.avaryKeyboard(String.valueOf(clientsId.get(i))));
-            avary3MessageID[i] = message2.getMessageId();
+        if (disableAlertsBoilers[boilerIndex]){
+            for (int i = 0; i < clientsId.size() ; i++) {
+                SendMessage message1 = new SendMessage();
+                message1.setChatId(clientsId.get(i));      // чат id
+                message1.setText(msgText);
+                Message message = execute(message1);
+                avaryMessageID[i] = message.getMessageId();
+                Message message2 = execute(Messages.avaryKeyboard(String.valueOf(clientsId.get(i))));
+                avary3MessageID[i] = message2.getMessageId();
+            }
         }
+
         boilerLoggingService.logBoilerStatus(boilersDataService.getBoilers().get(boilerIndex),msgText);
     }
 
@@ -614,8 +618,7 @@ public class TelegramService extends TelegramLongPollingBot {
             if (update.getCallbackQuery().getData().contains("boiler")){
                 try {
                     boilerControlNum=extractBoilerControlNum(update.getCallbackQuery().getData());
-                    InlineKeyboardMarkup controlMarkup = Messages.controlKeyboardMarkup();
-
+                    InlineKeyboardMarkup controlMarkup = Messages.controlKeyboardMarkup(disableAlertsBoilers[boilerControlNum]);
                     EditMessageText newMessage = new EditMessageText(
                             String.valueOf(chatId),
                             (int) messageId,
@@ -701,7 +704,7 @@ public class TelegramService extends TelegramLongPollingBot {
             }
             if (callData.equals("goBackToControl")){
                 try {
-                    InlineKeyboardMarkup controlMarkup = Messages.controlKeyboardMarkup();
+                    InlineKeyboardMarkup controlMarkup = Messages.controlKeyboardMarkup(disableAlertsBoilers[boilerControlNum]);
                     EditMessageText newMessage = new EditMessageText(
                             String.valueOf(chatId),
                             (int) messageId,
@@ -736,6 +739,25 @@ public class TelegramService extends TelegramLongPollingBot {
                 } catch (TelegramApiException e) {
                     e.printStackTrace();
                 }
+            }
+            if (callData.equals("disableAlerts=true")|callData.equals("disableAlerts=false")){
+                if (callData.equals("disableAlerts=true")){
+                    disableAlertsBoilers[boilerControlNum]=true;
+                }else {
+                    disableAlertsBoilers[boilerControlNum]=false;
+                }
+                InlineKeyboardMarkup controlMarkup = Messages.controlKeyboardMarkup(disableAlertsBoilers[boilerControlNum]);
+                EditMessageText newMessage = new EditMessageText(
+                        String.valueOf(chatId),
+                        (int) messageId,
+                        null,
+                        boilerNames[boilerControlNum],
+                        null,
+                        null,
+                        controlMarkup,
+                        null
+                );
+                execute(newMessage);
             }
         }
     }
