@@ -163,15 +163,15 @@ public class Messages {
         if (allowAlertForBoilers){
             List<InlineKeyboardButton> disableAlertsButtonRow = new ArrayList<>();
             InlineKeyboardButton disableAlertsButton = new InlineKeyboardButton();
-            disableAlertsButton.setText("\uD83D\uDCF5Отключить уведомления");
-            disableAlertsButton.setCallbackData("disableAlerts=true");
+            disableAlertsButton.setText("\uD83D\uDE80Включить уведомления");
+            disableAlertsButton.setCallbackData("disableAlerts=false");
             disableAlertsButtonRow.add(disableAlertsButton);
             rowList.add(disableAlertsButtonRow);
         } else {
             List<InlineKeyboardButton> disableAlertsButtonRow = new ArrayList<>();
             InlineKeyboardButton disableAlertsButton = new InlineKeyboardButton();
-            disableAlertsButton.setText("\uD83D\uDE80Включить уведомления");
-            disableAlertsButton.setCallbackData("disableAlerts=false");
+            disableAlertsButton.setText("\uD83D\uDCF5Отключить уведомления");
+            disableAlertsButton.setCallbackData("disableAlerts=true");
             disableAlertsButtonRow.add(disableAlertsButton);
             rowList.add(disableAlertsButtonRow);
         }

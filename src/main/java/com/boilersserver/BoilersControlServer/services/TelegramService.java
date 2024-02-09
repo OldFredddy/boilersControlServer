@@ -466,7 +466,7 @@ public class TelegramService extends TelegramLongPollingBot {
          String msgText=boilerNames[boilerIndex] + "\n" + "Аварийное значение!" + " Общие параметры на момент аварии:" + "\n"
                  + "\uD83D\uDD25 Температура уходящей воды: " + boilersDataService.getBoilers().get(boilerIndex).getTPod() + " °C" + "\n"
                  + "⚖️\uD83D\uDCA8 Давление в системе отопления: " + boilersDataService.getBoilers().get(boilerIndex).getPPod() + " МПа" + "\n" + comment;
-        if (disableAlertsBoilers[boilerIndex]){
+        if (!disableAlertsBoilers[boilerIndex]){
             for (int i = 0; i < clientsId.size() ; i++) {
                 SendMessage message1 = new SendMessage();
                 message1.setChatId(clientsId.get(i));      // чат id
@@ -503,18 +503,10 @@ public class TelegramService extends TelegramLongPollingBot {
              callbackData = update.getCallbackQuery().getData(); // данные обратного вызова
         }
         if (update.hasMessage()){
-            if (update.getMessage().toString().contains("Добавь меня")) {
-                Pattern pattern = Pattern.compile("\\[(.*?)\\]");
-                Matcher matcher = pattern.matcher(update.getMessage().toString());
-                while (matcher.find()) {
-                    try {
-                        int id = Integer.parseInt(matcher.group(1));
-                        clientsId.add((long) id);
-                    } catch (NumberFormatException e) {
-                        System.out.println("Найденный текст между скобками не является числом: " + matcher.group(1));
-                    }
-                }
-            } else {
+            if (update.getMessage().getText().contains("Добавь меня")) {
+                long senderId = update.getMessage().getFrom().getId();
+                clientsId.add(senderId);
+            }else {
                 try {
                     String chatId=update.getMessage().getChatId().toString();
                     execute(Messages.startKeyboard(chatId));
