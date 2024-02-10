@@ -58,13 +58,10 @@ public class TelegramService extends TelegramLongPollingBot {
             "Котельная Шишкина"                             //13  кот№14 ТО Шишкина
     };
     private volatile boolean enableCallService=false;
-    public float[] normalPvxHigh={0.5f, 0.5f, 0.5f, 0.5f, 0.35f, 6.0f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f,0.5f, 0.53f};
-    public float[] normalPvxLow= {0.32f, 0.32f, 0.23f, 0.29f, 0.12f, 1.0f, 0.02f, 0.32f, 0.30f, 0.32f, 0.32f, 0.32f, 0.02f, 0.22f};
-    private Integer[] avaryMessageID=new Integer[2];
+    public float[] normalPvxHigh={0.5f, 0.5f, 0.5f, 0.5f, 0.35f, 0.35f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f,0.5f, 0.53f};
+    public float[] normalPvxLow= {0.3f, 0.3f, 0.3f, 0.3f, 0.12f, 0.3f, 0.02f, 0.32f, 0.30f, 0.32f, 0.32f, 0.32f, 0.02f, 0.22f};
     private Timer timer = new Timer();
     private Timer timerSilintReset = new Timer();
-    Integer[] avary2MessageID= new Integer[2];
-    Integer[] avary3MessageID=new Integer[2];
     public boolean [] errorsArray = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};
     public boolean [] disableAlertsBoilers = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};
     public boolean [] pressureErrorsArray = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};
@@ -117,7 +114,7 @@ public class TelegramService extends TelegramLongPollingBot {
         }));
        clientsId.add(6290939545L);//TODO enter by xml or smth else
        clientsId.add(1102774002L);
-       //clientsId.add(6588122746L);
+       clientsId.add(6588122746L);
         for (int i = 0; i < flagSilentReset.length; i++) {
             flagSilentReset[i] = new AtomicBoolean(false);
         }
@@ -372,7 +369,6 @@ public class TelegramService extends TelegramLongPollingBot {
             format += "| %-" + maxLengths[i] + "s ";
         }
         format += "\n";
-
         // Формируем заголовок таблицы
         result.append(String.format(format, (Object[]) headers));
         String units = String.format(format, "", "°C", "м", "м3/ч", "");
@@ -472,9 +468,9 @@ public class TelegramService extends TelegramLongPollingBot {
                 message1.setChatId(clientsId.get(i));      // чат id
                 message1.setText(msgText);
                 Message message = execute(message1);
-                avaryMessageID[i] = message.getMessageId();
+               // avaryMessageID[i] = message.getMessageId();
                 Message message2 = execute(Messages.avaryKeyboard(String.valueOf(clientsId.get(i))));
-                avary3MessageID[i] = message2.getMessageId();
+               // avary3MessageID[i] = message2.getMessageId();
             }
         }
 
@@ -505,6 +501,9 @@ public class TelegramService extends TelegramLongPollingBot {
         if (update.hasMessage()){
             if (update.getMessage().getText().contains("Добавь меня")) {
                 long senderId = update.getMessage().getFrom().getId();
+                System.out.println(senderId);
+                System.out.println(senderId);
+                System.out.println(senderId);
                 clientsId.add(senderId);
             }else {
                 try {
@@ -529,23 +528,16 @@ public class TelegramService extends TelegramLongPollingBot {
                     secondAttempt[i]=false;
                 }
                 checkForAvary=true;
-                for (int i = 0; i < clientsId.size(); i++) {
-                    SendMessage message = new SendMessage(update.getCallbackQuery().getMessage().getChatId().toString(),"Готово");
-                    try {
-                        Message message2 = execute(message);
-                        avary2MessageID[i]= message2.getMessageId();
-                        Thread.sleep(LONG_SLEEP_TIME);
-                    } catch (TelegramApiException | InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
+                SendMessage message = new SendMessage(update.getCallbackQuery().getMessage().getChatId().toString(), "Ошибки сброшены!");
+                execute(message);
+                Thread.sleep(LONG_SLEEP_TIME);
             }
             if (update.getCallbackQuery().getData().equals("enableCallService")){
                     for (int i = 0; i < clientsId.size(); i++) {
                         SendMessage message = new SendMessage(update.getCallbackQuery().getMessage().getChatId().toString(), "Звонки включены!");
                         try {
                             Message message2 = execute(message);
-                            avary2MessageID[i] = message2.getMessageId();
+                           // avary2MessageID[i] = message2.getMessageId();
                             Thread.sleep(LONG_SLEEP_TIME);
                         } catch (TelegramApiException | InterruptedException e) {
                             throw new RuntimeException(e);
@@ -558,7 +550,7 @@ public class TelegramService extends TelegramLongPollingBot {
                         SendMessage message = new SendMessage(update.getCallbackQuery().getMessage().getChatId().toString(), "Звонки выключены!");
                         try {
                             Message message2 = execute(message);
-                            avary2MessageID[i] = message2.getMessageId();
+                            //avary2MessageID[i] = message2.getMessageId();
                             Thread.sleep(LONG_SLEEP_TIME);
                         } catch (TelegramApiException | InterruptedException e) {
                             throw new RuntimeException(e);
@@ -589,22 +581,25 @@ public class TelegramService extends TelegramLongPollingBot {
                     enableCallService = false;
             }
             if (callData.equals("bControl")) {
-                InlineKeyboardMarkup markupInline = Messages.chooseBoilerKeyboardMarkup();
-                EditMessageText newMessage = new EditMessageText(
-                        String.valueOf(chatId),
-                        (int) messageId,
-                        null,
-                        "Выберите котельную",
-                        null,
-                        null,
-                        markupInline,
-                        null
-                );
+                long senderId = update.getCallbackQuery().getFrom().getId();
+                if (clientsId.contains(senderId)){
+                    InlineKeyboardMarkup markupInline = Messages.chooseBoilerKeyboardMarkup();
+                    EditMessageText newMessage = new EditMessageText(
+                            String.valueOf(chatId),
+                            (int) messageId,
+                            null,
+                            "Выберите котельную",
+                            null,
+                            null,
+                            markupInline,
+                            null
+                    );
 
-                try {
-                    execute(newMessage);
-                } catch (TelegramApiException e) {
-                    e.printStackTrace();
+                    try {
+                        execute(newMessage);
+                    } catch (TelegramApiException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
             if (update.getCallbackQuery().getData().contains("boiler")){

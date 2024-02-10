@@ -20,6 +20,7 @@ public class HangCatcher {
     private final TelegramService telegramService;
     private final BoilersDataService boilersDataService;
     private final ArrayList<ArrayList<String>> tPodArr = new ArrayList<>();
+    private final ArrayList<ArrayList<String>> tStreetArr = new ArrayList<>();
     private final RedisTemplate<String, String> redisTemplate;
 
     @Autowired
@@ -29,6 +30,7 @@ public class HangCatcher {
         this.redisTemplate = redisTemplate;
         for (int i = 0; i < 14; i++) {
             tPodArr.add(new ArrayList<>());
+            tStreetArr.add(new ArrayList<>());
         }
     }
 
@@ -44,8 +46,10 @@ public class HangCatcher {
             String historyKey = "history:" + boilerKey;
             redisTemplate.opsForZSet().add(historyKey, boilerJson, currentTime);
             String tPod = boiler.getTPod();
+            String tStreet = boiler.getTUlica();
             updateList(tPodArr.get(i), tPod);
-            if (areAllElementsEqual(tPodArr.get(i))) {
+            updateList(tStreetArr.get(i), tStreet);
+            if (areAllElementsEqual(tPodArr.get(i))&&areAllElementsEqual(tStreetArr.get(i))) {
                 if (boiler.getIsOk() != 2){
                     boiler.setIsOk(2, boiler.getVersion() + 1);
                     telegramService.sendAttention(i, "Нет данных от котельной " + telegramService.boilerNames[i]);
@@ -63,7 +67,7 @@ public class HangCatcher {
     }
 
     private void updateList(List<String> list, String newValue) {
-        if (list.size() >= 300) {
+        if (list.size() >= 250) {
             list.remove(0);
         }
         list.add(newValue);
