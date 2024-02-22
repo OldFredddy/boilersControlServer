@@ -17,10 +17,10 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 public class HangCatcher {
-    private static final int BOILER_TPOD_HIGH = 150;
-    private static final int BOILER_TPOD_LOW = 0;
-    private static final float BOILER_PPOD_HIGH = 2;
-    private static final float BOILER_PPOD_LOW = 0;
+    private static final float BOILER_TPOD_HIGH = 150.0f;
+    private static final float BOILER_TPOD_LOW = 0.0f;
+    private static final float BOILER_PPOD_HIGH = 2.0f;
+    private static final float BOILER_PPOD_LOW = 0.0f;
     private final TelegramService telegramService;
     private final BoilersDataService boilersDataService;
     private final ArrayList<ArrayList<String>> tPodArr = new ArrayList<>();
@@ -83,22 +83,22 @@ public class HangCatcher {
         return list.size() > 1 && new HashSet<>(list).size() == 1;
     }
     private boolean checkBoilerValuesRanges(Boiler boiler){
-        if (Integer.parseInt(boiler.getTPod())>BOILER_TPOD_HIGH) {
+        if (Float.parseFloat(boiler.getTPod())>BOILER_TPOD_HIGH) {
             return false;
         }
-        if (Integer.parseInt(boiler.getTPod())<BOILER_TPOD_LOW) {
+        if (Float.parseFloat(boiler.getTPod())<BOILER_TPOD_LOW) {
             return false;
         }
-        if (Integer.parseInt(boiler.getPPod())>BOILER_PPOD_HIGH) {
+        if (Float.parseFloat(boiler.getPPod())>BOILER_PPOD_HIGH) {
             return false;
         }
-        if (Integer.parseInt(boiler.getPPod()) < BOILER_PPOD_LOW) {
+        if (Float.parseFloat(boiler.getPPod()) < BOILER_PPOD_LOW) {
             return false;
         }
-        if (Integer.parseInt(boiler.getTUlica()) > BOILER_TPOD_HIGH) {
+        if (Float.parseFloat(boiler.getTUlica()) > BOILER_TPOD_HIGH) {
             return false;
         }
-        if (Integer.parseInt(boiler.getTUlica()) < BOILER_TPOD_LOW) {
+        if (Float.parseFloat(boiler.getTUlica()) < BOILER_TPOD_LOW) {
             return false;
         }
         return true;
