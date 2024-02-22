@@ -17,6 +17,10 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 public class HangCatcher {
+    private static final int BOILER_TPOD_HIGH = 150;
+    private static final int BOILER_TPOD_LOW = 0;
+    private static final float BOILER_PPOD_HIGH = 2;
+    private static final float BOILER_PPOD_LOW = 0;
     private final TelegramService telegramService;
     private final BoilersDataService boilersDataService;
     private final ArrayList<ArrayList<String>> tPodArr = new ArrayList<>();
@@ -44,7 +48,9 @@ public class HangCatcher {
             Gson gson = new Gson();
             String boilerJson = gson.toJson(boiler);
             String historyKey = "history:" + boilerKey;
-            redisTemplate.opsForZSet().add(historyKey, boilerJson, currentTime);
+            if (checkBoilerValuesRanges(boiler)){
+                redisTemplate.opsForZSet().add(historyKey, boilerJson, currentTime);
+            }
             String tPod = boiler.getTPod();
             String tStreet = boiler.getTUlica();
             updateList(tPodArr.get(i), tPod);
@@ -58,7 +64,7 @@ public class HangCatcher {
         }
     }
     @Scheduled(fixedRate = 10000)
-    public void cleanupOldEntries() {
+    private void cleanupOldEntries() {
         long cutoff = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(8);
         for (int i = 0; i < 14; i++) {
             String historyKey = "history:boiler:" + i;
@@ -73,8 +79,29 @@ public class HangCatcher {
         list.add(newValue);
     }
 
-    public static boolean areAllElementsEqual(List<?> list) {
+    private static boolean areAllElementsEqual(List<?> list) {
         return list.size() > 1 && new HashSet<>(list).size() == 1;
+    }
+    private boolean checkBoilerValuesRanges(Boiler boiler){
+        if (Integer.parseInt(boiler.getTPod())>BOILER_TPOD_HIGH) {
+            return false;
+        }
+        if (Integer.parseInt(boiler.getTPod())<BOILER_TPOD_LOW) {
+            return false;
+        }
+        if (Integer.parseInt(boiler.getPPod())>BOILER_PPOD_HIGH) {
+            return false;
+        }
+        if (Integer.parseInt(boiler.getPPod()) < BOILER_PPOD_LOW) {
+            return false;
+        }
+        if (Integer.parseInt(boiler.getTUlica()) > BOILER_TPOD_HIGH) {
+            return false;
+        }
+        if (Integer.parseInt(boiler.getTUlica()) < BOILER_TPOD_LOW) {
+            return false;
+        }
+        return true;
     }
 }
 
