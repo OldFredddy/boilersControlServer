@@ -20,7 +20,7 @@ public class HangCatcher {
     private static final float BOILER_TPOD_HIGH = 150.0f;
     private static final float BOILER_TPOD_LOW = 0.0f;
     private static final float BOILER_PPOD_HIGH = 2.0f;
-    private static final float BOILER_PPOD_LOW = 0.0f;
+    private static final float BOILER_PPOD_LOW = -1001.0f;
     private final TelegramService telegramService;
     private final BoilersDataService boilersDataService;
     private final ArrayList<ArrayList<String>> tPodArr = new ArrayList<>();
@@ -98,7 +98,7 @@ public class HangCatcher {
         if (Float.parseFloat(boiler.getTUlica()) > BOILER_TPOD_HIGH) {
             return false;
         }
-        if (Float.parseFloat(boiler.getTUlica()) < BOILER_TPOD_LOW) {
+        if (Float.parseFloat(boiler.getTUlica()) < -100.0f) {
             return false;
         }
         return true;
