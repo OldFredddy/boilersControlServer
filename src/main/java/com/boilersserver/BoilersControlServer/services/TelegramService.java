@@ -214,7 +214,7 @@ public class TelegramService extends TelegramLongPollingBot {
                            }
                        }
                 }
-                System.gc();//TODO ПРОВЕРИТЬ System.gc()
+                System.gc();
             } catch (RuntimeException e) {
                 e.printStackTrace();
             } catch (InterruptedException | TelegramApiException e) {
