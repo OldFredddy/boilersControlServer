@@ -65,6 +65,14 @@ public class BoilersDataService {
         this.connectionProvider.dispose();
         System.out.println("clean BoilersDataService");
     }
+    public String getCorrectionTpodAtIndex(int index) {
+        String[] corrections = getCorrections().getCorrectionTpod();
+        if (corrections == null || corrections.length <= index || corrections[index] == null) {
+            return "0"; // или другое значение по умолчанию, которое подходит для вашей логики
+        }
+        return corrections[index];
+    }
+
     public boolean forFirstStart = true;
     @Scheduled(fixedRate = 3000)
     public void fetchBoilerData() {

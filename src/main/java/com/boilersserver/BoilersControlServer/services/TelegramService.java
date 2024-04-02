@@ -198,7 +198,7 @@ public class TelegramService extends TelegramLongPollingBot {
                         }
                        if (!temperatureErrorsArray[i]) {
                            if ((temperatureMonitor.isTemperatureAnomaly(boiler.getId(),
-                                   boilersDataService.getCorrections().getCorrectionTpod()[i],
+                                   boilersDataService.getCorrectionTpodAtIndex(i),
                                   boiler)) &&
                                    (!boiler.getPPod().equals(INVALID_VALUE))) {
                                if (!flagSilentReset[i].get()) {
@@ -214,7 +214,7 @@ public class TelegramService extends TelegramLongPollingBot {
                            }
                        }
                 }
-                System.gc();//TODO ПРОВЕРИТЬ System.gc()
+                System.gc();
             } catch (RuntimeException e) {
                 e.printStackTrace();
             } catch (InterruptedException | TelegramApiException e) {
