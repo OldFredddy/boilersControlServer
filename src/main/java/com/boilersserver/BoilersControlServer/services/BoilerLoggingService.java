@@ -18,22 +18,15 @@ public class BoilerLoggingService {
     }
 
     public void logBoilerStatus(Boiler boiler, String errorDesc) {
-        // Попытка найти существующий лог для данного котла
         BoilerLog log = logRepository.findByBoiler(boiler);
         if (log == null) {
             log = new BoilerLog();
             log.setBoiler(boiler);
-            log.setErrorDescs(new ArrayList<>()); // Создание нового списка ошибок
+            log.setErrorDescs(new ArrayList<>());
             log.setTimestamp(System.currentTimeMillis());
         }
-
-        // Добавление новой ошибки в список
         log.getErrorDescs().add(errorDesc);
-
-        // Обновление временной метки
         log.setTimestamp(System.currentTimeMillis());
-
-        // Сохранение обновленного лога в репозитории
         logRepository.save(log);
     }
 }
