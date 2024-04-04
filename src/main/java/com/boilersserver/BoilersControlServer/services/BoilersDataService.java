@@ -68,7 +68,7 @@ public class BoilersDataService {
     public String getCorrectionTpodAtIndex(int index) {
         String[] corrections = getCorrections().getCorrectionTpod();
         if (corrections == null || corrections.length <= index || corrections[index] == null) {
-            return "0"; 
+            return "0";
         }
         return corrections[index];
     }
