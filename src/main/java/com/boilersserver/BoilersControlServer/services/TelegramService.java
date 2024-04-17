@@ -112,10 +112,10 @@ public class TelegramService extends TelegramLongPollingBot {
            timer.cancel();
             System.out.println("ShutdownHook executed");
         }));
-       clientsId.add(6290939545L);//TODO enter by xml or smth else
+       clientsId.add(6290939545L);//TODO enter by xml or DB
        clientsId.add(1102774002L);
        clientsId.add(6588122746L);
-       clientsId.add(5164539595L);
+       //clientsId.add(5164539595L);
         for (int i = 0; i < flagSilentReset.length; i++) {
             flagSilentReset[i] = new AtomicBoolean(false);
         }

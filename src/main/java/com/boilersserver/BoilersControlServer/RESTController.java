@@ -100,4 +100,14 @@ public class RESTController {
             return "Error: " + e.getMessage();
         }
     }
+    @CrossOrigin(origins = "*")
+    @PostMapping("/setMagicIndicators")
+    public String setPumpStationParams(@RequestBody List<String> magicIndicators) {
+        try {
+            pumpStationDataService.setMagicIndicators(magicIndicators);
+            return "Success";
+        } catch (Exception e) {
+            return "Error: " + e.getMessage();
+        }
+    }
 }

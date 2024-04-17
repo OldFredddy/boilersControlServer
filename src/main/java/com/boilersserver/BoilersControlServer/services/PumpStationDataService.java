@@ -7,6 +7,7 @@ import lombok.Getter;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
@@ -39,10 +40,12 @@ public class PumpStationDataService {
     public boolean forFirstStart = true;
 
     public void refreshData(PumpStation pumpStation){
-        pumpStation.setMagicIndicator1("***");
-        pumpStation.setMagicIndicator2("***");
-        pumpStation.setMagicIndicator3("***");
-        pumpStation.setMagicIndicator4("***");
         this.pumpStation=pumpStation;
+    }
+    public void setMagicIndicators(List<String> magicIndicators){
+        this.pumpStation.setMagicIndicator1(magicIndicators.get(0));
+        this.pumpStation.setMagicIndicator2(magicIndicators.get(1));
+        this.pumpStation.setMagicIndicator3(magicIndicators.get(2));
+        this.pumpStation.setMagicIndicator4(magicIndicators.get(3));
     }
 }
