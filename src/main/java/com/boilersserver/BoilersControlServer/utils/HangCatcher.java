@@ -1,7 +1,9 @@
 package com.boilersserver.BoilersControlServer.utils;
 
 import com.boilersserver.BoilersControlServer.entities.Boiler;
+import com.boilersserver.BoilersControlServer.entities.PumpStation;
 import com.boilersserver.BoilersControlServer.services.BoilersDataService;
+import com.boilersserver.BoilersControlServer.services.PumpStationDataService;
 import com.boilersserver.BoilersControlServer.services.TelegramService;
 import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,15 +25,17 @@ public class HangCatcher {
     private static final float BOILER_PPOD_LOW = -1001.0f;
     private final TelegramService telegramService;
     private final BoilersDataService boilersDataService;
+    private final PumpStationDataService pumpStationDataService;
     private final ArrayList<ArrayList<String>> tPodArr = new ArrayList<>();
     private final ArrayList<ArrayList<String>> tStreetArr = new ArrayList<>();
     private final RedisTemplate<String, String> redisTemplate;
 
     @Autowired
-    public HangCatcher(TelegramService telegramService, BoilersDataService boilersDataService, RedisTemplate<String, String> redisTemplate) {
+    public HangCatcher(TelegramService telegramService, BoilersDataService boilersDataService,PumpStationDataService pumpStationDataService, RedisTemplate<String, String> redisTemplate) {
         this.telegramService = telegramService;
         this.boilersDataService = boilersDataService;
         this.redisTemplate = redisTemplate;
+        this.pumpStationDataService = pumpStationDataService;
         for (int i = 0; i < 14; i++) {
             tPodArr.add(new ArrayList<>());
             tStreetArr.add(new ArrayList<>());
@@ -42,6 +46,7 @@ public class HangCatcher {
     public void compareAndNotify() throws TelegramApiException, InterruptedException {
         for (int i = 0; i < boilersDataService.getBoilers().size(); i++) {
             Boiler boiler = boilersDataService.getBoilers().get(i);
+            PumpStation pumpStation = pumpStationDataService.getPumpStation();
             long currentTime = System.currentTimeMillis();
             boiler.setLastUpdated(currentTime);
             String boilerKey = "boiler:" + boiler.getId();
@@ -50,6 +55,13 @@ public class HangCatcher {
             String historyKey = "history:" + boilerKey;
             if (checkBoilerValuesRanges(boiler)){
                 redisTemplate.opsForZSet().add(historyKey, boilerJson, currentTime);
+            }
+            String pumpStationKey = "pumpstation:" + "0";
+            Gson pumpStationGson = new Gson();
+            String pumpStationJson = pumpStationGson.toJson(pumpStation);
+            String pumpStationHistoryKey = "phistory:" + pumpStationKey;
+            if (checkPumpStationValuesRanges(pumpStation)){
+                redisTemplate.opsForZSet().add(pumpStationHistoryKey, pumpStationJson, currentTime);
             }
             String tPod = boiler.getTPod();
             String tStreet = boiler.getTUlica();
@@ -67,8 +79,10 @@ public class HangCatcher {
     private void cleanupOldEntries() {
         long cutoff = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(8);
         for (int i = 0; i < 14; i++) {
-            String historyKey = "history:boiler:" + i;
-            redisTemplate.opsForZSet().removeRangeByScore(historyKey, 0, cutoff);
+            String boilerHistoryKey = "history:boiler:" + i;
+            redisTemplate.opsForZSet().removeRangeByScore(boilerHistoryKey, 0, cutoff);
+            String pumpStationHistoryKey = "phistory:pumpstation:0";
+            redisTemplate.opsForZSet().removeRangeByScore(pumpStationHistoryKey, 0, cutoff);
         }
     }
 
@@ -102,6 +116,24 @@ public class HangCatcher {
             return false;
         }
         return true;
+    }
+    private boolean checkPumpStationValuesRanges(PumpStation pumpStation) {
+        try {
+            float t1 = Float.parseFloat(pumpStation.getMagicIndicator1());
+            float t2 = Float.parseFloat(pumpStation.getMagicIndicator2());
+            float t3 = Float.parseFloat(pumpStation.getMagicIndicator3());
+            float t4 = Float.parseFloat(pumpStation.getMagicIndicator4());
+
+            if (!isValueInRange(t1) || !isValueInRange(t2) || !isValueInRange(t3) || !isValueInRange(t4)) {
+                return false;
+            }
+        } catch (NumberFormatException e) {
+            return false;
+        }
+        return true;
+    }
+    private boolean isValueInRange(float value) {
+        return value >= -5.0f && value <= 30.0f;
     }
 }
 

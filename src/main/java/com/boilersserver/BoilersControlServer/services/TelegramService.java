@@ -400,7 +400,7 @@ public class TelegramService extends TelegramLongPollingBot {
         }
         String[] headers = {"***", "Тпод", "Ур. воды", "Расх", "S"};
         Object[][] rows = {
-                {"В гор.", "", "" , pumpStation.getForCityFlow(), getStatusEmoji(pumpStation.getIsOk())},
+                {"В город", "", "" , pumpStation.getForCityFlow(), getStatusEmoji(pumpStation.getIsOk())},
                 {"С Гудыма", pumpStation.getFromPumpStationTpod(), "", "", getStatusEmoji(pumpStation.getIsOk())},
                 {"Рез. 1", pumpStation.getReserv1Tpod(), pumpStation.getReserv1Lvl(), "", getStatusEmoji(pumpStation.getIsOk())},
                 {"Рез. 2", pumpStation.getReserv2Tpod(), pumpStation.getReserv2Lvl(), "", getStatusEmoji(pumpStation.getIsOk())},
