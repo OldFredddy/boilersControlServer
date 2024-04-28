@@ -200,8 +200,7 @@ public class TelegramService extends TelegramLongPollingBot {
                        if (!temperatureErrorsArray[i]) {
                            if ((temperatureMonitor.isTemperatureAnomaly(boiler.getId(),
                                    boilersDataService.getCorrectionTpodAtIndex(i),
-                                  boiler)) &&
-                                   (!boiler.getPPod().equals(INVALID_VALUE))) {
+                                  boiler))) { //TODO ОШИПКА
                                if (!flagSilentReset[i].get()) {
                                    sendAttention(i, "Проблема в температуре подачи!\n" + "Верхний предел: " + temperatureMonitor.getHighLimit() + " °C" +
                                            "\nНижний предел: " + temperatureMonitor.getLowLimit() + " °C");

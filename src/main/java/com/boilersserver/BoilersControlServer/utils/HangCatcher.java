@@ -42,7 +42,7 @@ public class HangCatcher {
         }
     }
 
-    @Scheduled(fixedRate = 12000)
+    @Scheduled(initialDelay = 10000, fixedRate = 12000)
     public void compareAndNotify() throws TelegramApiException, InterruptedException {
         for (int i = 0; i < boilersDataService.getBoilers().size(); i++) {
             Boiler boiler = boilersDataService.getBoilers().get(i);
