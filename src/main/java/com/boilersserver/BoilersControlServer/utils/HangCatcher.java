@@ -57,6 +57,7 @@ public class HangCatcher {
                 redisTemplate.opsForZSet().add(historyKey, boilerJson, currentTime);
             }
             String pumpStationKey = "pumpstation:" + "0";
+            pumpStation.setLastUpdated(currentTime);
             Gson pumpStationGson = new Gson();
             String pumpStationJson = pumpStationGson.toJson(pumpStation);
             String pumpStationHistoryKey = "phistory:" + pumpStationKey;
