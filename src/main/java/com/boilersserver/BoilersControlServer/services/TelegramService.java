@@ -68,6 +68,7 @@ public class TelegramService extends TelegramLongPollingBot {
     public boolean [] temperatureErrorsArray = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};
     static volatile Integer messageId = -1;
     List<Long> clientsId = new ArrayList<>();
+    Long chiefOfWasteWaterStation = 7084589354L;
     public boolean checkForAvary =true;
     private static final String TEMPERATURE_PROBLEM_MESSAGE = "Проблема в температуре подачи!";
     private static final String PRESSURE_PROBLEM_LOW_MESSAGE = "Проблема в давлении! Ниже допустимого!";
@@ -470,7 +471,15 @@ public class TelegramService extends TelegramLongPollingBot {
                 Message message = execute(message1);
                // avaryMessageID[i] = message.getMessageId();
                 Message message2 = execute(Messages.avaryKeyboard(String.valueOf(clientsId.get(i))));
-               // avary3MessageID[i] = message2.getMessageId();
+                Thread.sleep(100);
+            }
+            if (boilerIndex == 3) {
+                SendMessage tempMessage = new SendMessage();
+                tempMessage.setChatId(chiefOfWasteWaterStation);
+                tempMessage.setText(msgText);
+                Message message3 = execute(tempMessage);
+                Message message4 = execute(Messages.avaryKeyboard(String.valueOf(chiefOfWasteWaterStation)));
+                Thread.sleep(100);
             }
         }
 
