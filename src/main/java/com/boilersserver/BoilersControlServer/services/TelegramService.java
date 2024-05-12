@@ -65,11 +65,14 @@ public class TelegramService extends TelegramLongPollingBot {
     public boolean [] errorsArray = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};
     public boolean [] disableAlertsBoilers = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};
     public boolean [] pressureErrorsArray = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};
+    public boolean [] gasEngineErrorsArray = {false, false, false, false};
     public boolean [] temperatureErrorsArray = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};
     static volatile Integer messageId = -1;
     List<Long> clientsId = new ArrayList<>();
+    List<Long> clientsIdGasEngine = new ArrayList<>();
     Long chiefOfWasteWaterStation = 7084589354L;
     public boolean checkForAvary =true;
+    public boolean disableAlertsGasStation =false;
     private static final String TEMPERATURE_PROBLEM_MESSAGE = "Проблема в температуре подачи!";
     private static final String PRESSURE_PROBLEM_LOW_MESSAGE = "Проблема в давлении! Ниже допустимого!";
     private static final String PRESSURE_PROBLEM_HIGH_MESSAGE = "Проблема в давлении! Превышение!";
@@ -81,6 +84,7 @@ public class TelegramService extends TelegramLongPollingBot {
     private volatile BoilersDataService boilersDataService;
     private volatile GudimDataService gudimDataService;
     private volatile PumpStationDataService pumpStationDataService;
+    private volatile GasEngineDataService gasEngineDataService;
     private volatile BoilerLoggingService boilerLoggingService;
     private TemperatureMonitor temperatureMonitor = new TemperatureMonitor();
     Tokens tokens;
@@ -90,13 +94,14 @@ public class TelegramService extends TelegramLongPollingBot {
     @Autowired
     public TelegramService(BoilersDataService boilersDataService, Tokens tokens, Graphics graphics,
                            BoilerLoggingService boilerLoggingService, GudimDataService gudimDataService,
-                           PumpStationDataService pumpStationDataService)  {
+                           PumpStationDataService pumpStationDataService, GasEngineDataService gasEngineDataService)  {
         this.boilersDataService = boilersDataService;
         this.tokens = tokens;
         this.graphics=graphics;
         this.boilerLoggingService=boilerLoggingService;
         this.gudimDataService=gudimDataService;
         this.pumpStationDataService=pumpStationDataService;
+        this.gasEngineDataService = gasEngineDataService;
     }
     AtomicBoolean[] flagSilentReset = new AtomicBoolean[14];
     @PostConstruct
@@ -116,6 +121,8 @@ public class TelegramService extends TelegramLongPollingBot {
        clientsId.add(6290939545L);//TODO enter by xml or DB
        clientsId.add(1102774002L);
        clientsId.add(6588122746L);
+       clientsIdGasEngine.add(1102774002L);
+       clientsIdGasEngine.add(chiefOfWasteWaterStation);
        //clientsId.add(5164539595L);
         for (int i = 0; i < flagSilentReset.length; i++) {
             flagSilentReset[i] = new AtomicBoolean(false);
@@ -134,6 +141,7 @@ public class TelegramService extends TelegramLongPollingBot {
         }
         monitorThread2.start();
         pressureMonitor.start();
+        gasEngineTemperatureMonitor.start();
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
@@ -190,7 +198,8 @@ public class TelegramService extends TelegramLongPollingBot {
                 }
                 refreshMessage(getBoilersParamsText(errorsArray)+"\n"+
                         getGudimParamsTable1(gudimDataService.getGudimParams())+"\n"+
-                        getPumpStationTableView(pumpStationDataService.getPumpStation()));
+                        getPumpStationTableView(pumpStationDataService.getPumpStation())+"\n"+
+                        getGasStationParamsTable(gasEngineDataService.getGasEngineStation()));
 
                 Thread.sleep(SLEEP_TIME);                                    //блок проверки аварий
                 for (int i = 0; i < boilersDataService.getBoilers().size(); i++) {
@@ -215,6 +224,7 @@ public class TelegramService extends TelegramLongPollingBot {
                            }
                        }
                 }
+
                 System.gc();
             } catch (RuntimeException e) {
                 e.printStackTrace();
@@ -274,7 +284,40 @@ public class TelegramService extends TelegramLongPollingBot {
             }
         }
     });
-
+    Thread gasEngineTemperatureMonitor = new Thread(()->{
+        while (keepRunning){
+            try {
+                try {
+                    Thread.sleep(LONG_LONG_SLEEP_TIME);
+                    Thread.sleep(SLEEP_TIME);
+                } catch (InterruptedException e) {
+                    continue;
+                }
+                for (int i = 0; i < gasEngineErrorsArray.length; i++) {
+                    if (!gasEngineErrorsArray[i]){
+                        if (Math.abs(Float.parseFloat(gasEngineDataService.getGasEngineStation().getEngineTemp())-Float
+                                .parseFloat(gasEngineDataService.getGasEngineStation().getNormalEngineTemp()))>10){
+                            sendAttentionGasEngine(0,"");
+                        }
+                        if (Math.abs(Float.parseFloat(gasEngineDataService.getGasEngineStation().getGeneratorTemp())-Float
+                                .parseFloat(gasEngineDataService.getGasEngineStation().getNormalGeneratorTemp()))>10){
+                            sendAttentionGasEngine(1,"");
+                        }
+                        if (Math.abs(Float.parseFloat(gasEngineDataService.getGasEngineStation().getRadiatorTemp())-Float
+                                .parseFloat(gasEngineDataService.getGasEngineStation().getNormalRadiatorTemp()))>10){
+                            sendAttentionGasEngine(2,"");
+                        }
+                    }
+                }
+                System.gc();
+            } catch (RuntimeException e) {
+                e.printStackTrace();
+                continue;
+            } catch (InterruptedException | TelegramApiException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    });
     private void refreshMessage(String text){
         LocalTime currentTime = LocalTime.now();
         LocalTime timePlusNine = currentTime.plusHours(9);
@@ -443,7 +486,50 @@ public class TelegramService extends TelegramLongPollingBot {
         result.append("```\n");
         return result.toString();
     }
-
+    public String getGasStationParamsTable(GasEngineStation gasEngineStation) {
+        StringBuilder result = new StringBuilder();
+        result.append("Газомоторная станция - ВОС\n");
+        String[] headers = {"***", "Т", "***", "***", "S"};
+        Object[][] rows = {
+                {"Двигатель", gasEngineStation.getEngineTemp(), "" , "", getStatusEmoji(gasEngineStation.getIsOk())},
+                {"Радиатор", gasEngineStation.getRadiatorTemp(), "", "", getStatusEmoji(gasEngineStation.getIsOk())},
+                {"Генератор", gasEngineStation.getGeneratorTemp(), "", "", getStatusEmoji(gasEngineStation.getIsOk())},
+                {"Помещение", gasEngineStation.getRoomTemp(), "", "", getStatusEmoji(gasEngineStation.getIsOk())}
+        };
+        int[] maxLengths = new int[headers.length];
+        for (int i = 0; i < headers.length; i++) {
+            maxLengths[i] = headers[i].length(); // начальное значение - длина заголовка
+            for (Object[] row : rows) {
+                if (row[i] != null) {
+                    maxLengths[i] = Math.max(maxLengths[i], row[i].toString().length());
+                }
+            }
+        }
+        String format = "";
+        for (int i = 0; i < maxLengths.length; i++) {
+            // Добавляем логику центрирования без добавления дополнительных отступов
+            format += "| %-" + maxLengths[i] + "s ";
+        }
+        format += "\n";
+        result.append(String.format(format, (Object[]) headers));
+        String units = String.format(format, "", "°C", "", "", "");
+        result.append(units);
+        // Формируем строки таблицы с учетом центрирования
+        for (Object[] row : rows) {
+            for (int i = 0; i < row.length; i++) {
+                // Центрирование содержимого каждой ячейки
+                String cellValue = (row[i] != null) ? row[i].toString() : "";
+                int spaceToAdd = maxLengths[i] - cellValue.length();
+                int paddingBefore = spaceToAdd / 2;
+                int paddingAfter = spaceToAdd - paddingBefore;
+                String formatValue = "".repeat(paddingBefore) + cellValue + "".repeat(paddingAfter);//TODO вот тут проследить за пробелами
+                row[i] = formatValue;
+            }
+            result.append(String.format(format, row));
+        }
+        result.append("```\n");
+        return result.toString();
+    }
     private String getStatusEmoji(int status) {
         switch (status) {
             case 0: return "⏳"; // waiting
@@ -485,7 +571,30 @@ public class TelegramService extends TelegramLongPollingBot {
 
         boilerLoggingService.logBoilerStatus(boilersDataService.getBoilers().get(boilerIndex),msgText);
     }
+    public void sendAttentionGasEngine(int paramId, String comment) throws TelegramApiException, InterruptedException {
+        gasEngineErrorsArray[paramId]=true;
+        gasEngineDataService.getGasEngineStation().setIsOk(2,gasEngineDataService.getGasEngineStation().getVersion()+1);  //0-waiting 1 - good 2 - error
+        String msgText="Газомоторная станция ВОС" + "\n" + "Аварийное значение!" + "Параметры на момент аварии:" + "\n"
+                + "\uD83D\uDD25 Температура двигателя: " + gasEngineDataService.getGasEngineStation().getEngineTemp() + " °C" + "\n"
+                + "⚖️\uD83D\uDCA8 Температура радиатора: " + gasEngineDataService.getGasEngineStation().getRadiatorTemp() + " °C" + "\n"
+                + "\uD83D\uDD25  Температура генератора: " + gasEngineDataService.getGasEngineStation().getGeneratorTemp()+ " °C" + "\n"
+                + "Нормальные значения:"+ "\n"
+                + "\uD83D\uDD25 Нормальная температура двигателя: " + gasEngineDataService.getGasEngineStation().getNormalEngineTemp() + " °C" + "\n"
+                + "⚖️\uD83D\uDCA8 Нормальная температура радиатора: " + gasEngineDataService.getGasEngineStation().getNormalRadiatorTemp() + " °C" + "\n"
+                + "\uD83D\uDD25  Нормальная температура генератора: " + gasEngineDataService.getGasEngineStation().getNormalGeneratorTemp()+ " °C" + "\n"+
+                comment+"/n";
+        if (!disableAlertsGasStation){
+            for (int i = 0; i < clientsIdGasEngine.size() ; i++) {
+                SendMessage message1 = new SendMessage();
+                message1.setChatId(clientsIdGasEngine.get(i));      // чат id
+                message1.setText(msgText);
+                Message message = execute(message1);
+                Message message2 = execute(Messages.avaryKeyboard(String.valueOf(clientsIdGasEngine.get(i))));
+                Thread.sleep(100);
+            }
+        }
 
+    }
     private void trySilentReset(int boilerIndex) {
             if (errorsArray[boilerIndex]) {
                 flagSilentReset[boilerIndex].set(true);
@@ -536,6 +645,10 @@ public class TelegramService extends TelegramLongPollingBot {
                     temperatureErrorsArray[i]=false;
                     secondAttempt[i]=false;
                 }
+                for (int i = 0; i < gasEngineErrorsArray.length; i++) {
+                    gasEngineErrorsArray[i] = false;
+                }
+                gasEngineDataService.getGasEngineStation().setIsOk(1,gasEngineDataService.getGasEngineStation().getVersion()+1);
                 checkForAvary=true;
                 SendMessage message = new SendMessage(update.getCallbackQuery().getMessage().getChatId().toString(), "Ошибки сброшены!");
                 execute(message);
@@ -794,6 +907,7 @@ public class TelegramService extends TelegramLongPollingBot {
         timerSilintReset=null;
         pressureMonitor.interrupt();
         monitorThread2=null;
+        gasEngineTemperatureMonitor=null;
         System.gc();
     }
 }

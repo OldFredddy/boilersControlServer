@@ -1,13 +1,7 @@
 package com.boilersserver.BoilersControlServer;
 
-import com.boilersserver.BoilersControlServer.entities.Boiler;
-import com.boilersserver.BoilersControlServer.entities.GudimParams;
-import com.boilersserver.BoilersControlServer.entities.PumpStation;
-import com.boilersserver.BoilersControlServer.entities.TemperatureCorrections;
-import com.boilersserver.BoilersControlServer.services.BoilersDataService;
-import com.boilersserver.BoilersControlServer.services.GudimDataService;
-import com.boilersserver.BoilersControlServer.services.PumpStationDataService;
-import com.boilersserver.BoilersControlServer.services.TelegramService;
+import com.boilersserver.BoilersControlServer.entities.*;
+import com.boilersserver.BoilersControlServer.services.*;
 import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -23,15 +17,17 @@ public class RESTController {
     private final TemperatureCorrections temperatureCorrections;
     private final GudimDataService gudimDataService;
     private final PumpStationDataService pumpStationDataService;
+    private final GasEngineDataService gasEngineDataService;
     @Autowired
     public RESTController(TelegramService telegramService, BoilersDataService boilersDataService,
                           TemperatureCorrections temperatureCorrections, GudimDataService gudimDataService,
-                          PumpStationDataService pumpStationDataService) {
+                          PumpStationDataService pumpStationDataService, GasEngineDataService gasEngineDataService) {
         this.gudimDataService = gudimDataService;
         this.telegramService = telegramService;
         this.boilersDataService = boilersDataService;
         this.temperatureCorrections = temperatureCorrections;
         this.pumpStationDataService = pumpStationDataService;
+        this.gasEngineDataService = gasEngineDataService;
     }
     @CrossOrigin(origins = "*")
     @GetMapping("/getparams")
@@ -105,6 +101,16 @@ public class RESTController {
     public String setPumpStationParams(@RequestBody List<String> magicIndicators) {
         try {
             pumpStationDataService.setMagicIndicators(magicIndicators);
+            return "Success";
+        } catch (Exception e) {
+            return "Error: " + e.getMessage();
+        }
+    }
+    @CrossOrigin(origins = "*")
+    @PostMapping("/setGasEngineStationParams")
+    public String setGasEngineStationParams(@RequestBody GasEngineStation gasEngineStation) {
+        try {
+            gasEngineDataService.refreshData(gasEngineStation);
             return "Success";
         } catch (Exception e) {
             return "Error: " + e.getMessage();

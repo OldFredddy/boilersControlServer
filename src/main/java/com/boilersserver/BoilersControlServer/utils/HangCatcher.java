@@ -1,8 +1,10 @@
 package com.boilersserver.BoilersControlServer.utils;
 
 import com.boilersserver.BoilersControlServer.entities.Boiler;
+import com.boilersserver.BoilersControlServer.entities.GasEngineStation;
 import com.boilersserver.BoilersControlServer.entities.PumpStation;
 import com.boilersserver.BoilersControlServer.services.BoilersDataService;
+import com.boilersserver.BoilersControlServer.services.GasEngineDataService;
 import com.boilersserver.BoilersControlServer.services.PumpStationDataService;
 import com.boilersserver.BoilersControlServer.services.TelegramService;
 import com.google.gson.Gson;
@@ -16,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 @Service
 public class HangCatcher {
@@ -26,20 +29,26 @@ public class HangCatcher {
     private final TelegramService telegramService;
     private final BoilersDataService boilersDataService;
     private final PumpStationDataService pumpStationDataService;
+    private final GasEngineDataService gasEngineDataService;
     private final ArrayList<ArrayList<String>> tPodArr = new ArrayList<>();
     private final ArrayList<ArrayList<String>> tStreetArr = new ArrayList<>();
+    private ArrayList<String> engineTempArr = new ArrayList<>();
     private final RedisTemplate<String, String> redisTemplate;
 
     @Autowired
-    public HangCatcher(TelegramService telegramService, BoilersDataService boilersDataService,PumpStationDataService pumpStationDataService, RedisTemplate<String, String> redisTemplate) {
+    public HangCatcher(TelegramService telegramService, BoilersDataService boilersDataService,
+                       PumpStationDataService pumpStationDataService, GasEngineDataService gasEngineDataService,
+                       RedisTemplate<String, String> redisTemplate) {
         this.telegramService = telegramService;
         this.boilersDataService = boilersDataService;
         this.redisTemplate = redisTemplate;
         this.pumpStationDataService = pumpStationDataService;
+        this.gasEngineDataService = gasEngineDataService;
         for (int i = 0; i < 14; i++) {
             tPodArr.add(new ArrayList<>());
             tStreetArr.add(new ArrayList<>());
         }
+        engineTempArr = new ArrayList<>();
     }
 
     @Scheduled(initialDelay = 10000, fixedRate = 12000)
@@ -75,6 +84,22 @@ public class HangCatcher {
                 }
             }
         }
+        GasEngineStation gasEngine = gasEngineDataService.getGasEngineStation();
+        long currentTime = System.currentTimeMillis();
+        gasEngine.setLastUpdated(currentTime);
+        String engineKey = "engine:0";
+        Gson gson = new Gson();
+        String engineJson = gson.toJson(gasEngine);
+        String engineHistoryKey = "history:" + engineKey;
+            redisTemplate.opsForZSet().add(engineHistoryKey, engineJson, currentTime);
+        String engineTemp = gasEngine.getEngineTemp();
+        updateList(engineTempArr, engineTemp); // Теперь engineTempArr это одиночный список, не массив списков.
+        if (areAllElementsEqual(engineTempArr)) {
+            if (gasEngine.getIsOk() != 2){
+                gasEngine.setIsOk(2, gasEngine.getVersion() + 1);
+                telegramService.sendAttentionGasEngine(0, "Нет связи с газомоторной станцией");
+            }
+        }
     }
     @Scheduled(fixedRate = 20000)
     private void cleanupOldEntries() {
@@ -85,6 +110,8 @@ public class HangCatcher {
             String pumpStationHistoryKey = "phistory:pumpstation:0";
             redisTemplate.opsForZSet().removeRangeByScore(pumpStationHistoryKey, 0, cutoff);
         }
+        String engineHistoryKey = "history:engine:0";
+        redisTemplate.opsForZSet().removeRangeByScore(engineHistoryKey, 0, cutoff);
     }
 
     private void updateList(List<String> list, String newValue) {
