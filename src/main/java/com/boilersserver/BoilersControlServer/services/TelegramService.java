@@ -98,9 +98,9 @@ public class TelegramService extends TelegramLongPollingBot {
         this.boilersDataService = boilersDataService;
         this.tokens = tokens;
         this.graphics=graphics;
-        this.boilerLoggingService=boilerLoggingService;
-        this.gudimDataService=gudimDataService;
-        this.pumpStationDataService=pumpStationDataService;
+        this.boilerLoggingService = boilerLoggingService;
+        this.gudimDataService = gudimDataService;
+        this.pumpStationDataService = pumpStationDataService;
         this.gasEngineDataService = gasEngineDataService;
     }
     AtomicBoolean[] flagSilentReset = new AtomicBoolean[14];
@@ -121,6 +121,7 @@ public class TelegramService extends TelegramLongPollingBot {
        clientsId.add(6290939545L);//TODO enter by xml or DB
        clientsId.add(1102774002L);
        clientsId.add(6588122746L);
+       clientsId.add(1589552937L);
        clientsIdGasEngine.add(1102774002L);
        clientsIdGasEngine.add(chiefOfWasteWaterStation);
        //clientsId.add(5164539595L);
