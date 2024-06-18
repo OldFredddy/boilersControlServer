@@ -81,6 +81,7 @@ public class TelegramService extends TelegramLongPollingBot {
     private static final long LONG_SLEEP_TIME = 2800L;
     private static final long LONG_LONG_SLEEP_TIME = 4500L;
     private static final long SHORT_SLEEP_TIME = 2800L;
+    private static final long SUPER_SHORT_SLEEP_TIME = 800L;
     private volatile BoilersDataService boilersDataService;
     private volatile GudimDataService gudimDataService;
     private volatile PumpStationDataService pumpStationDataService;
@@ -685,27 +686,48 @@ public class TelegramService extends TelegramLongPollingBot {
                         enableCallService = false;
                     }
             }
-            if (update.getCallbackQuery().getData().equals("increaseTpod")||update.getCallbackQuery().getData().equals("decreaseTpod")){
+            if (update.getCallbackQuery().getData().equals("increaseTpod") || update.getCallbackQuery().getData().equals("decreaseTpod") ||
+                    update.getCallbackQuery().getData().equals("increaseTAlarm") || update.getCallbackQuery().getData().equals("decreaseTAlarm")) {
+
                 String[] correctForScadaForSend = {"0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"};
-                    try {
-                        if (update.getCallbackQuery().getData().equals("increaseTpod")) {
-                            SendMessage message = new SendMessage(update.getCallbackQuery().getMessage().getChatId().toString(), "Запрос на +3 отправлен!");
-                            execute(message);
-                            correctForScadaForSend[boilerControlNum] = String.valueOf(Integer.parseInt(correctForScadaForSend[boilerControlNum])+3);
-                            boilersDataService.setCorrectionsTpod(correctForScadaForSend);
-                            Thread.sleep(SLEEP_TIME);
-                        }
-                        if (update.getCallbackQuery().getData().equals("decreaseTpod")) {
-                            SendMessage message = new SendMessage(update.getCallbackQuery().getMessage().getChatId().toString(), "Запрос на -3 отправлен!");
-                            execute(message);
-                            correctForScadaForSend[boilerControlNum] = String.valueOf(Integer.parseInt(correctForScadaForSend[boilerControlNum])-3);
-                            boilersDataService.setCorrectionsTpod(correctForScadaForSend);
-                            Thread.sleep(SLEEP_TIME);
-                        }
-                    } catch (TelegramApiException | InterruptedException e) {
-                        throw new RuntimeException(e);
+                String[] correctForAlarmForSend = {"0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"};
+                try {
+                    if (update.getCallbackQuery().getData().equals("increaseTpod")) {
+                        SendMessage message = new SendMessage(update.getCallbackQuery().getMessage().getChatId().toString(),
+                                "Запрос на +3 отправлен!\n"+"Текущая температура в контроллере:"+boilersDataService.getBoilers().get(boilerControlNum).getTPlan());
+                        execute(message);
+                        correctForScadaForSend[boilerControlNum] = String.valueOf(Integer.parseInt(correctForScadaForSend[boilerControlNum]) + 3);
+                        boilersDataService.setCorrectionsTpod(correctForScadaForSend);
+                        Thread.sleep(SUPER_SHORT_SLEEP_TIME);
                     }
-                    enableCallService = false;
+                    if (update.getCallbackQuery().getData().equals("decreaseTpod")) {
+                        SendMessage message = new SendMessage(update.getCallbackQuery().getMessage().getChatId().toString(),
+                                "Запрос на -3 отправлен!\n"+"Текущая температура в контроллере:"+boilersDataService.getBoilers().get(boilerControlNum).getTPlan());
+                        execute(message);
+                        correctForScadaForSend[boilerControlNum] = String.valueOf(Integer.parseInt(correctForScadaForSend[boilerControlNum]) - 3);
+                        boilersDataService.setCorrectionsTpod(correctForScadaForSend);
+                        Thread.sleep(SUPER_SHORT_SLEEP_TIME);
+                    }
+                    if (update.getCallbackQuery().getData().equals("increaseTAlarm")) {
+                        SendMessage message = new SendMessage(update.getCallbackQuery().getMessage().getChatId().toString(),
+                                "Запрос на +3 (Alarm) отправлен!\n"+"Текущая температура аварии:"+boilersDataService.getBoilers().get(boilerControlNum).getTAlarm());
+                        execute(message);
+                        correctForAlarmForSend[boilerControlNum] = String.valueOf(Integer.parseInt(correctForAlarmForSend[boilerControlNum]) + 3);
+                        boilersDataService.setCorrectionsTAlarm(correctForAlarmForSend);
+                        Thread.sleep(SUPER_SHORT_SLEEP_TIME);
+                    }
+                    if (update.getCallbackQuery().getData().equals("decreaseTAlarm")) {
+                        SendMessage message = new SendMessage(update.getCallbackQuery().getMessage().getChatId().toString(),
+                                "Запрос на -3 (Alarm) отправлен!\n"+"Текущая температура аварии:"+boilersDataService.getBoilers().get(boilerControlNum).getTAlarm());
+                        execute(message);
+                        correctForAlarmForSend[boilerControlNum] = String.valueOf(Integer.parseInt(correctForAlarmForSend[boilerControlNum]) - 3);
+                        boilersDataService.setCorrectionsTAlarm(correctForAlarmForSend);
+                        Thread.sleep(SUPER_SHORT_SLEEP_TIME);
+                    }
+                } catch (TelegramApiException | InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                enableCallService = false;
             }
             if (callData.equals("bControl")) {
                 long senderId = update.getCallbackQuery().getFrom().getId();

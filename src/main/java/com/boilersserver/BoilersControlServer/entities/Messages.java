@@ -120,9 +120,6 @@ public class Messages {
         return message;
     }
     public static InlineKeyboardMarkup controlKeyboardMarkup(boolean allowAlertForBoilers) {
-      //  SendMessage message = new SendMessage();
-      //  message.setChatId(chatId);
-      //  message.setText("Выберите действие:");
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
         List<InlineKeyboardButton> buttonList2 = new ArrayList<>();
@@ -145,11 +142,21 @@ public class Messages {
         InlineKeyboardButton showGraphics = new InlineKeyboardButton();
         showGraphics.setText("\uD83D\uDCC8Статистика");
         showGraphics.setCallbackData("graphicsButton");
+        InlineKeyboardButton increaseTAlarmButton = new InlineKeyboardButton();
+        increaseTAlarmButton.setText("+3°С (Alarm)");
+        increaseTAlarmButton.setCallbackData("increaseTAlarm");
+        InlineKeyboardButton decreaseTAlarmButton = new InlineKeyboardButton();
+        decreaseTAlarmButton.setText("-3°С (Alarm)");
+        decreaseTAlarmButton.setCallbackData("decreaseTAlarm");
+
         buttonList2.add(enableCallServiceButton);
         buttonList3.add(disableCallServiceButton);
         buttonList4.add(increaseTpodButton);
         buttonList4.add(decreaseTpodButton);
+        buttonList4.add(increaseTAlarmButton);
+        buttonList4.add(decreaseTAlarmButton);
         buttonList5.add(showGraphics);
+
         List<InlineKeyboardButton> backButtonRow = new ArrayList<>();
         InlineKeyboardButton backButton = new InlineKeyboardButton();
         backButton.setText("↩️Назад");
@@ -160,6 +167,7 @@ public class Messages {
         rowList.add(buttonList3);
         rowList.add(buttonList4);
         rowList.add(buttonList5);
+
         if (allowAlertForBoilers){
             List<InlineKeyboardButton> disableAlertsButtonRow = new ArrayList<>();
             InlineKeyboardButton disableAlertsButton = new InlineKeyboardButton();
@@ -175,11 +183,12 @@ public class Messages {
             disableAlertsButtonRow.add(disableAlertsButton);
             rowList.add(disableAlertsButtonRow);
         }
+
         rowList.add(backButtonRow);
         inlineKeyboardMarkup.setKeyboard(rowList);
-        // message.setReplyMarkup(inlineKeyboardMarkup);
         return inlineKeyboardMarkup;
     }
+
     public static InlineKeyboardMarkup graphicsKeyboard() {
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
