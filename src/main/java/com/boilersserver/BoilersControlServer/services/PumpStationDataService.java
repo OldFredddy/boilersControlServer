@@ -18,7 +18,6 @@ public class PumpStationDataService {
     private List<String> magicIndicatorsBuffer = new ArrayList<>();
     public PumpStationDataService(WebClient.Builder webClientBuilder) {
             PumpStation pumpStation1 = new PumpStation();
-
             pumpStation1.setId(0);
             pumpStation1.setIsOk(2,1);
             pumpStation1.setLastUpdated(0);

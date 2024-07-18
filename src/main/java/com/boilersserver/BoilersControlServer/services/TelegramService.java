@@ -573,7 +573,7 @@ public class TelegramService extends TelegramLongPollingBot {
             }
         }
 
-        boilerLoggingService.logBoilerStatus(boilersDataService.getBoilers().get(boilerIndex),msgText);
+        //boilerLoggingService.logBoilerStatus(boilersDataService.getBoilers().get(boilerIndex),msgText);
     }
     public void sendAttentionGasEngine(int paramId, String comment) throws TelegramApiException, InterruptedException {
 
@@ -608,7 +608,7 @@ public class TelegramService extends TelegramLongPollingBot {
                 temperatureErrorsArray[boilerIndex]=false;
                 pressureErrorsArray[boilerIndex]=false;
                 boilersDataService.getBoilers().get(boilerIndex).setIsOk(1,boilersDataService.getBoilers().get(boilerIndex).getVersion()+1);
-                boilerLoggingService.logBoilerStatus(boilersDataService.getBoilers().get(boilerIndex),"Ошибка котельной с индексом " + boilerIndex + " была успешно сброшена в тихом режиме.");
+                //boilerLoggingService.logBoilerStatus(boilersDataService.getBoilers().get(boilerIndex),"Ошибка котельной с индексом " + boilerIndex + " была успешно сброшена в тихом режиме.");
             }
     }
     @SneakyThrows
