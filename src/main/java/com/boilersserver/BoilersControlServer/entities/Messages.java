@@ -127,6 +127,7 @@ public class Messages {
         List<InlineKeyboardButton> buttonList4 = new ArrayList<>();
         List<InlineKeyboardButton> buttonList5 = new ArrayList<>();
         List<InlineKeyboardButton> buttonList6 = new ArrayList<>();
+        List<InlineKeyboardButton> buttonList7 = new ArrayList<>();
         InlineKeyboardButton enableCallServiceButton = new InlineKeyboardButton();
         enableCallServiceButton.setText("Включить звонки");
         enableCallServiceButton.setCallbackData("enableCallService");
@@ -148,7 +149,12 @@ public class Messages {
         InlineKeyboardButton decreaseTAlarmButton = new InlineKeyboardButton();
         decreaseTAlarmButton.setText("-3°С (Alarm)");
         decreaseTAlarmButton.setCallbackData("decreaseTAlarm");
-
+        InlineKeyboardButton pumpOn = new InlineKeyboardButton();
+        pumpOn.setText("Насос ✅");
+        pumpOn.setCallbackData("pumpOn");
+        InlineKeyboardButton pumpOff = new InlineKeyboardButton();
+        pumpOff.setText("Насос ❌");
+        pumpOff.setCallbackData("pumpOff");
         buttonList2.add(enableCallServiceButton);
         buttonList3.add(disableCallServiceButton);
         buttonList4.add(increaseTpodButton);
@@ -156,7 +162,8 @@ public class Messages {
         buttonList4.add(increaseTAlarmButton);
         buttonList4.add(decreaseTAlarmButton);
         buttonList5.add(showGraphics);
-
+        buttonList6.add(pumpOn);
+        buttonList7.add(pumpOff);
         List<InlineKeyboardButton> backButtonRow = new ArrayList<>();
         InlineKeyboardButton backButton = new InlineKeyboardButton();
         backButton.setText("↩️Назад");
@@ -167,6 +174,8 @@ public class Messages {
         rowList.add(buttonList3);
         rowList.add(buttonList4);
         rowList.add(buttonList5);
+        rowList.add(buttonList6);
+        rowList.add(buttonList7);
 
         if (allowAlertForBoilers){
             List<InlineKeyboardButton> disableAlertsButtonRow = new ArrayList<>();
