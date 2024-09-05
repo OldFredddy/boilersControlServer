@@ -34,6 +34,7 @@ public class HangCatcher {
     private final ArrayList<ArrayList<String>> tStreetArr = new ArrayList<>();
     private ArrayList<String> engineTempArr = new ArrayList<>();
     private final RedisTemplate<String, String> redisTemplate;
+    long thresholdTime = TimeUnit.MINUTES.toMillis(5);
 
     @Autowired
     public HangCatcher(TelegramService telegramService, BoilersDataService boilersDataService,
@@ -51,13 +52,14 @@ public class HangCatcher {
         engineTempArr = new ArrayList<>();
     }
 
-    @Scheduled(initialDelay = 10000, fixedRate = 12000)
+    @Scheduled(initialDelay = 10000, fixedRate = 5000)
     public void compareAndNotify() throws TelegramApiException, InterruptedException {
         for (int i = 0; i < boilersDataService.getBoilers().size(); i++) {
             Boiler boiler = boilersDataService.getBoilers().get(i);
             PumpStation pumpStation = pumpStationDataService.getPumpStation();
             long currentTime = System.currentTimeMillis();
             boiler.setLastUpdated(currentTime);
+            long lastUpdatedTime = boiler.getLastUpdated();
             String boilerKey = "boiler:" + boiler.getId();
             Gson gson = new Gson();
             String boilerJson = gson.toJson(boiler);
@@ -77,7 +79,7 @@ public class HangCatcher {
             String tStreet = boiler.getTUlica();
             updateList(tPodArr.get(i), tPod);
             updateList(tStreetArr.get(i), tStreet);
-            if (areAllElementsEqual(tPodArr.get(i))&&areAllElementsEqual(tStreetArr.get(i))) {
+            if (areAllElementsEqual(tPodArr.get(i),lastUpdatedTime, thresholdTime)&&areAllElementsEqual(tStreetArr.get(i),lastUpdatedTime, thresholdTime)) {
                 if (boiler.getIsOk() != 2){
                     boiler.setIsOk(2, boiler.getVersion() + 1);
                     telegramService.sendAttention(i, "Нет данных от котельной " + telegramService.boilerNames[i]);
@@ -87,6 +89,7 @@ public class HangCatcher {
         GasEngineStation gasEngine = gasEngineDataService.getGasEngineStation();
         long currentTime = System.currentTimeMillis();
         gasEngine.setLastUpdated(currentTime);
+        long engineLastUpdatedTime = gasEngine.getLastUpdated();
         String engineKey = "engine:0";
         Gson gson = new Gson();
         String engineJson = gson.toJson(gasEngine);
@@ -94,7 +97,7 @@ public class HangCatcher {
             redisTemplate.opsForZSet().add(engineHistoryKey, engineJson, currentTime);
         String engineTemp = gasEngine.getEngineTemp();
         updateList(engineTempArr, engineTemp); // Теперь engineTempArr это одиночный список, не массив списков.
-        if (areAllElementsEqual(engineTempArr)) {
+        if (areAllElementsEqual(engineTempArr, engineLastUpdatedTime, thresholdTime)) {
             if (gasEngine.getIsOk() != 2){
                 gasEngine.setIsOk(2, gasEngine.getVersion() + 1);
                 telegramService.sendAttentionGasEngine(0, "Нет связи с газомоторной станцией");
@@ -121,8 +124,12 @@ public class HangCatcher {
         list.add(newValue);
     }
 
-    private static boolean areAllElementsEqual(List<?> list) {
-        return list.size() > 1 && new HashSet<>(list).size() == 1;
+    private static boolean areAllElementsEqual(List<String> list, long lastUpdatedTime, long thresholdTime) {
+        if (list.size() > 1 && new HashSet<>(list).size() == 1) {
+            long currentTime = System.currentTimeMillis();
+            return (currentTime - lastUpdatedTime) > thresholdTime;
+        }
+        return false;
     }
     private boolean checkBoilerValuesRanges(Boiler boiler){
         if (Float.parseFloat(boiler.getTPod())>BOILER_TPOD_HIGH) {

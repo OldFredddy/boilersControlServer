@@ -258,7 +258,7 @@ public class TelegramService extends TelegramLongPollingBot {
                         currentPpodLow= Double.parseDouble(boilersDataService.getBoilers().get(i).getPPodLowFixed());
                     }
                     if (!pressureErrorsArray[i]) {
-                        if ((!boilersDataService.getBoilers().get(i).getPPod().equals(INVALID_VALUE)) &&                                          //pressure errors check
+                        if ((!boilersDataService.getBoilers().get(i).getPPod().equals(INVALID_VALUE)) &&            //pressure errors check
                                 ((Float.parseFloat(boilersDataService.getBoilers().get(i).getPPod()) < currentPpodLow) ||
                                         (Float.parseFloat(boilersDataService.getBoilers().get(i).getPPod()) > currentPpodHigh))) {
                             if (!flagSilentReset[i].get()) {
