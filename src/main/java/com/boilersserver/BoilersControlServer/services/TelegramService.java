@@ -180,7 +180,7 @@ public class TelegramService extends TelegramLongPollingBot {
                     trySilentReset(i);
                 }
             }
-        }, 5 * 60 * 1000, 5 * 60 * 1000);
+        }, 1 * 60 * 1000, 1 * 60 * 1000);
         timerSilintReset.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
@@ -189,7 +189,7 @@ public class TelegramService extends TelegramLongPollingBot {
                 }
 
             }
-        }, 32  * 1000, 37  * 1000);
+        }, 32  * 1000, 8  * 1000);
     }
 
     Thread monitorThread2 = new Thread(()->{
