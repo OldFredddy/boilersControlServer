@@ -51,15 +51,23 @@ public class HangCatcher {
         }
         engineTempArr = new ArrayList<>();
     }
-
+    long communicationTimeout = 2 * 60 * 1000;
     @Scheduled(initialDelay = 10000, fixedRate = 2000)
     public void compareAndNotify() throws TelegramApiException, InterruptedException {
         for (int i = 0; i < boilersDataService.getBoilers().size(); i++) {
             Boiler boiler = boilersDataService.getBoilers().get(i);
             PumpStation pumpStation = pumpStationDataService.getPumpStation();
             long currentTime = System.currentTimeMillis();
-            boiler.setLastUpdated(currentTime);
+            // boiler.setLastUpdated(currentTime);
             long lastUpdatedTime = boiler.getLastUpdated();
+            long lastValueChangedTime = boiler.getLastValueChangedTime();
+            if ((currentTime - lastUpdatedTime) > communicationTimeout) {
+                if (boiler.getIsOk() != 2){
+                    boiler.setIsOk(2, boiler.getVersion() + 1);
+                    telegramService.sendAttention(i, "Нет связи с котельной " + telegramService.boilerNames[i]);
+                }
+                continue;
+            }
             String boilerKey = "boiler:" + boiler.getId();
             Gson gson = new Gson();
             String boilerJson = gson.toJson(boiler);
@@ -79,10 +87,11 @@ public class HangCatcher {
             String tStreet = boiler.getTUlica();
             updateList(tPodArr.get(i), tPod);
             updateList(tStreetArr.get(i), tStreet);
-            if (areAllElementsEqual(tPodArr.get(i),lastUpdatedTime, thresholdTime)&&areAllElementsEqual(tStreetArr.get(i),lastUpdatedTime, thresholdTime)) {
+            if (areAllElementsEqual(tPodArr.get(i), lastValueChangedTime, thresholdTime) &&
+                    areAllElementsEqual(tStreetArr.get(i), lastValueChangedTime, thresholdTime)) {
                 if (boiler.getIsOk() != 2){
                     boiler.setIsOk(2, boiler.getVersion() + 1);
-                    telegramService.sendAttention(i, "Нет данных от котельной " + telegramService.boilerNames[i]);
+                    telegramService.sendAttention(i, "Значения от котельной " + telegramService.boilerNames[i] + " не меняются");
                 }
             }
         }
@@ -124,10 +133,10 @@ public class HangCatcher {
         list.add(newValue);
     }
 
-    private static boolean areAllElementsEqual(List<String> list, long lastUpdatedTime, long thresholdTime) {
+    private static boolean areAllElementsEqual(List<String> list, long lastValueChangedTime, long thresholdTime) {
         if (list.size() > 1 && new HashSet<>(list).size() == 1) {
             long currentTime = System.currentTimeMillis();
-            return (currentTime - lastUpdatedTime) > thresholdTime;
+            return (currentTime - lastValueChangedTime) > thresholdTime;
         }
         return false;
     }

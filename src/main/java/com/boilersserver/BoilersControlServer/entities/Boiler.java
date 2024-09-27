@@ -22,6 +22,7 @@ public class Boiler {
     @Setter private Integer id;
     @Setter private long version;
     @Setter private long lastUpdated;
+    @Setter private long lastValueChangedTime;
     public void setIsOk(int isOk, long newVersion) {   //0-waiting 1 - good 2 - error
         if (newVersion > this.version) {
             this.isOk = isOk;
