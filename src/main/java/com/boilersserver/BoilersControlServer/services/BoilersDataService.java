@@ -73,6 +73,46 @@ public class BoilersDataService {
         return corrections[index];
     }
     public boolean forFirstStart = true;
+    public void refreshBoilersParams(List<Boiler> boilersList){
+        for (int i = 0; i < boilersList.size(); i++) {
+            Boiler oldBoiler = this.boilers.get(i);
+            Boiler newBoiler = boilersList.get(i);
+
+            boolean isValueChanged = false;
+
+            if (!oldBoiler.getTPod().equals(newBoiler.getTPod())) {
+                this.boilers.get(i).setTPod(newBoiler.getTPod());
+                isValueChanged = true;
+            }
+            if (!oldBoiler.getPPod().equals(newBoiler.getPPod())) {
+                this.boilers.get(i).setPPod(newBoiler.getPPod());
+                isValueChanged = true;
+            }
+            if (!oldBoiler.getTUlica().equals(newBoiler.getTUlica())) {
+                this.boilers.get(i).setTUlica(newBoiler.getTUlica());
+                isValueChanged = true;
+            }
+            this.boilers.get(i).setTPodFixed(boilersList.get(i).getTPodFixed());
+            this.boilers.get(i).setPPodHighFixed(boilersList.get(i).getPPodHighFixed());
+            this.boilers.get(i).setPPodLowFixed(boilersList.get(i).getPPodLowFixed());
+            this.boilers.get(i).setTPlan(boilersList.get(i).getTPlan());
+            this.boilers.get(i).setImageResId(boilersList.get(i).getImageResId());
+            this.boilers.get(i).setId(boilersList.get(i).getId());
+            this.boilers.get(i).setTAlarm(boilersList.get(i).getTAlarm());
+            this.boilers.get(i).setLastUpdated(System.currentTimeMillis());
+            if (isValueChanged) {
+                oldBoiler.setLastValueChangedTime(System.currentTimeMillis());
+            }
+        }
+        if (forFirstStart){
+            for (Boiler boiler : this.boilers) {
+                boiler.setIsOk(1, 2);
+                boiler.setLastValueChangedTime(System.currentTimeMillis());
+            }
+            forFirstStart=false;
+        }
+        isUpdateInProgress.set(false);
+    }
     @Scheduled(fixedRate = 3000)
     public void fetchBoilerData() {
         if (isUpdateInProgress.compareAndSet(false, true)) {

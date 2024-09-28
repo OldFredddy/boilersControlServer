@@ -62,9 +62,10 @@ public class HangCatcher {
             long lastUpdatedTime = boiler.getLastUpdated();
             long lastValueChangedTime = boiler.getLastValueChangedTime();
             if ((currentTime - lastUpdatedTime) > communicationTimeout) {
+                telegramService.sendAttention(i, "Нет связи с котельной " + telegramService.boilerNames[i]);
                 if (boiler.getIsOk() != 2){
                     boiler.setIsOk(2, boiler.getVersion() + 1);
-                    telegramService.sendAttention(i, "Нет связи с котельной " + telegramService.boilerNames[i]);
+
                 }
                 continue;
             }
@@ -89,10 +90,11 @@ public class HangCatcher {
             updateList(tStreetArr.get(i), tStreet);
             if (areAllElementsEqual(tPodArr.get(i), lastValueChangedTime, thresholdTime) &&
                     areAllElementsEqual(tStreetArr.get(i), lastValueChangedTime, thresholdTime)) {
-                if (boiler.getIsOk() != 2){
-                    boiler.setIsOk(2, boiler.getVersion() + 1);
-                    telegramService.sendAttention(i, "Значения от котельной " + telegramService.boilerNames[i] + " не меняются");
-                }
+                telegramService.sendAttention(i, "Значения от котельной " + telegramService.boilerNames[i] + " не меняются");
+                // if (boiler.getIsOk() != 2){
+                    //     boiler.setIsOk(2, boiler.getVersion() + 1);
+                    //
+                    // }
             }
         }
         GasEngineStation gasEngine = gasEngineDataService.getGasEngineStation();

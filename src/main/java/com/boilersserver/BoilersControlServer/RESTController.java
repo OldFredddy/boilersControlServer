@@ -87,6 +87,16 @@ public class RESTController {
         }
     }
     @CrossOrigin(origins = "*")
+    @PostMapping("/setBoilersParams")
+    public String setBoilersParams(@RequestBody List<Boiler> boilers) {
+        try {
+            boilersDataService.fetchBoilerData(boilers);
+            return "Success";
+        } catch (Exception e) {
+            return "Error: " + e.getMessage();
+        }
+    }
+    @CrossOrigin(origins = "*")
     @PostMapping("/setPumpStationParams")
     public String setPumpStationParams(@RequestBody PumpStation pumpStation) {
         try {
