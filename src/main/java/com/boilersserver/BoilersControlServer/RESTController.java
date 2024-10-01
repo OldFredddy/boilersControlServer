@@ -2,6 +2,7 @@ package com.boilersserver.BoilersControlServer;
 
 import com.boilersserver.BoilersControlServer.entities.*;
 import com.boilersserver.BoilersControlServer.services.*;
+import com.boilersserver.BoilersControlServer.utils.JsonMapper;
 import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -88,9 +89,11 @@ public class RESTController {
     }
     @CrossOrigin(origins = "*")
     @PostMapping("/setBoilersParams")
-    public String setBoilersParams(@RequestBody List<Boiler> boilers) {
+    public String setBoilersParams(@RequestBody String json) {
         try {
-            boilersDataService.fetchBoilerData(boilers);
+            // Используем JsonMapper для преобразования JSON в список Boiler
+            List<Boiler> boilers = JsonMapper.mapJsonToBoilers(json);
+            boilersDataService.setBoilersDataFromRest(boilers);
             return "Success";
         } catch (Exception e) {
             return "Error: " + e.getMessage();

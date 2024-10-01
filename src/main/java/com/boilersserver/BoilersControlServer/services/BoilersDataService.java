@@ -113,50 +113,52 @@ public class BoilersDataService {
         }
         isUpdateInProgress.set(false);
     }
-    @Scheduled(fixedRate = 3000)
-    public void fetchBoilerData() {
+    public void setBoilersDataFromRest(List<Boiler> boilers){
+        for (int i = 0; i < boilers.size(); i++) {
+            Boiler oldBoiler = this.boilers.get(i);
+            Boiler newBoiler = boilers.get(i);
+
+            boolean isValueChanged = false;
+
+            if (!oldBoiler.getTPod().equals(newBoiler.getTPod())) {
+                this.boilers.get(i).setTPod(newBoiler.getTPod());
+                isValueChanged = true;
+            }
+            if (!oldBoiler.getPPod().equals(newBoiler.getPPod())) {
+                this.boilers.get(i).setPPod(newBoiler.getPPod());
+                isValueChanged = true;
+            }
+            if (!oldBoiler.getTUlica().equals(newBoiler.getTUlica())) {
+                this.boilers.get(i).setTUlica(newBoiler.getTUlica());
+                isValueChanged = true;
+            }
+            this.boilers.get(i).setTPodFixed(boilers.get(i).getTPodFixed());
+            this.boilers.get(i).setPPodHighFixed(boilers.get(i).getPPodHighFixed());
+            this.boilers.get(i).setPPodLowFixed(boilers.get(i).getPPodLowFixed());
+            this.boilers.get(i).setTPlan(boilers.get(i).getTPlan());
+            this.boilers.get(i).setImageResId(boilers.get(i).getImageResId());
+            this.boilers.get(i).setId(boilers.get(i).getId());
+            this.boilers.get(i).setTAlarm(boilers.get(i).getTAlarm());
+            this.boilers.get(i).setLastUpdated(System.currentTimeMillis());
+            if (isValueChanged) {
+                oldBoiler.setLastValueChangedTime(System.currentTimeMillis());
+            }
+        }
+        if (forFirstStart){
+            for (Boiler boiler : this.boilers) {
+                boiler.setIsOk(1, 2);
+                boiler.setLastValueChangedTime(System.currentTimeMillis());
+            }
+            forFirstStart=false;
+        }
+        isUpdateInProgress.set(false);
+    }
+    public void fetchBoilerData(List<Boiler> boilers) {
         if (isUpdateInProgress.compareAndSet(false, true)) {
             getBoilersFromClient()
                     .subscribe(
                             boilersList -> {
-                                for (int i = 0; i < boilersList.size(); i++) {
-                                    Boiler oldBoiler = this.boilers.get(i);
-                                    Boiler newBoiler = boilersList.get(i);
 
-                                    boolean isValueChanged = false;
-
-                                    if (!oldBoiler.getTPod().equals(newBoiler.getTPod())) {
-                                        this.boilers.get(i).setTPod(newBoiler.getTPod());
-                                        isValueChanged = true;
-                                    }
-                                    if (!oldBoiler.getPPod().equals(newBoiler.getPPod())) {
-                                        this.boilers.get(i).setPPod(newBoiler.getPPod());
-                                        isValueChanged = true;
-                                    }
-                                    if (!oldBoiler.getTUlica().equals(newBoiler.getTUlica())) {
-                                        this.boilers.get(i).setTUlica(newBoiler.getTUlica());
-                                        isValueChanged = true;
-                                    }
-                                    this.boilers.get(i).setTPodFixed(boilersList.get(i).getTPodFixed());
-                                    this.boilers.get(i).setPPodHighFixed(boilersList.get(i).getPPodHighFixed());
-                                    this.boilers.get(i).setPPodLowFixed(boilersList.get(i).getPPodLowFixed());
-                                    this.boilers.get(i).setTPlan(boilersList.get(i).getTPlan());
-                                    this.boilers.get(i).setImageResId(boilersList.get(i).getImageResId());
-                                    this.boilers.get(i).setId(boilersList.get(i).getId());
-                                    this.boilers.get(i).setTAlarm(boilersList.get(i).getTAlarm());
-                                    this.boilers.get(i).setLastUpdated(System.currentTimeMillis());
-                                    if (isValueChanged) {
-                                        oldBoiler.setLastValueChangedTime(System.currentTimeMillis());
-                                    }
-                                }
-                                if (forFirstStart){
-                                    for (Boiler boiler : this.boilers) {
-                                        boiler.setIsOk(1, 2);
-                                        boiler.setLastValueChangedTime(System.currentTimeMillis());
-                                    }
-                                    forFirstStart=false;
-                                }
-                                isUpdateInProgress.set(false);
                             },
                             error -> {
                                 System.err.println("Ошибка при получении данных: " + error.getMessage());
@@ -196,13 +198,13 @@ public class BoilersDataService {
                         error -> System.err.println("Ошибка: " + error.getMessage())
         );
     }
-    public Mono<List<Boiler>> getBoilersFromClient() {
-        return webClient.get()
-                .uri("/getclientparams")
-                .retrieve()
-                .bodyToMono(String.class)
-                .map(JsonMapper::mapJsonToBoilers);
-    }
+     public Mono<List<Boiler>> getBoilersFromClient() {
+             return webClient.get()
+                             .uri("/getclientparams")
+                             .retrieve()
+                             .bodyToMono(String.class)
+                             .map(JsonMapper::mapJsonToBoilers);
+         }
 
     public Mono<String[]> setCorrectionsTpodToClient(String[] correctionsTpod) {
         Gson gson = new Gson();

@@ -32,7 +32,9 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 @Component
@@ -79,7 +81,7 @@ public class TelegramService extends TelegramLongPollingBot {
     private static final String INVALID_VALUE = "-1000";
     private static final long SLEEP_TIME = 2000L;
     private static final long LONG_SLEEP_TIME = 2800L;
-    private static final long LONG_LONG_SLEEP_TIME = 4500L;
+    private static final long LONG_LONG_SLEEP_TIME = 6000L;
     private static final long SHORT_SLEEP_TIME = 2800L;
     private static final long SUPER_SHORT_SLEEP_TIME = 800L;
     private volatile BoilersDataService boilersDataService;
@@ -121,8 +123,8 @@ public class TelegramService extends TelegramLongPollingBot {
         }));
        clientsId.add(6290939545L);//TODO enter by xml or DB
        clientsId.add(1102774002L);
-       clientsId.add(6588122746L);
-       clientsId.add(1589552937L);
+     //  clientsId.add(6588122746L);
+     //  clientsId.add(1589552937L);
        clientsIdGasEngine.add(1102774002L);
        clientsIdGasEngine.add(chiefOfWasteWaterStation);
        //clientsId.add(5164539595L);
@@ -180,7 +182,7 @@ public class TelegramService extends TelegramLongPollingBot {
                     trySilentReset(i);
                 }
             }
-        }, 1 * 60 * 1000, 1 * 60 * 1000);
+        }, 1 * 60 * 1000, 5 * 60 * 1000);
         timerSilintReset.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
@@ -546,24 +548,49 @@ public class TelegramService extends TelegramLongPollingBot {
             default: return "❓"; // unknown
         }
     }
-
+    private final ConcurrentHashMap<Integer, AtomicLong> lastAlertTimestampsMap = new ConcurrentHashMap<>();
+    private static final long ALERT_INTERVAL_MS = 40_000;
     public void sendAttention(int boilerIndex, String comment) throws TelegramApiException, InterruptedException {
-        errorsArray[boilerIndex]=true;
-        boilersDataService.getBoilers().get(boilerIndex).setIsOk(2,boilersDataService.getBoilers().get(boilerIndex).getVersion()+1);  //0-waiting 1 - good 2 - error
-         if (enableCallService){
-                 ZvonokPostService.call("+79140808817");//TODO Replace with xml|.conf
-                 ZvonokPostService.call("+79145353244");
-             }
-         String msgText=boilerNames[boilerIndex] + "\n" + "Аварийное значение!" + " Общие параметры на момент аварии:" + "\n"
-                 + "\uD83D\uDD25 Температура уходящей воды: " + boilersDataService.getBoilers().get(boilerIndex).getTPod() + " °C" + "\n"
-                 + "⚖️\uD83D\uDCA8 Давление в системе отопления: " + boilersDataService.getBoilers().get(boilerIndex).getPPod() + " МПа" + "\n" + comment;
-        if (!disableAlertsBoilers[boilerIndex]){
-            for (int i = 0; i < clientsId.size() ; i++) {
+        long currentTime = System.currentTimeMillis();
+
+        // Получаем AtomicLong для данного boilerIndex, если его нет — создаём
+        AtomicLong lastAlertTimeAtomic = lastAlertTimestampsMap.computeIfAbsent(boilerIndex, k -> new AtomicLong(0));
+
+        long lastAlertTime = lastAlertTimeAtomic.get();
+        if (currentTime - lastAlertTime < ALERT_INTERVAL_MS) {
+            // Если с последней отправки прошло меньше 40 секунд, не отправляем уведомление
+            System.out.println("Уведомление для котельной " + boilerIndex + " отправлено недавно. Пропуск.");
+            return;
+        }
+
+        // Попытка обновить время последней отправки атомарно
+        boolean updated = lastAlertTimeAtomic.compareAndSet(lastAlertTime, currentTime);
+        if (!updated) {
+            // Если обновление не удалось (другое уведомление уже обновило время), пропускаем отправку
+            System.out.println("Уведомление для котельной " + boilerIndex + " было обновлено другим потоком. Пропуск.");
+            return;
+        }
+
+        // Если прошло достаточно времени, продолжаем с отправкой уведомления
+        errorsArray[boilerIndex] = true;
+        boilersDataService.getBoilers().get(boilerIndex).setIsOk(2, boilersDataService.getBoilers().get(boilerIndex).getVersion() + 1);  // 0-waiting 1 - good 2 - error
+
+        if (enableCallService) {
+            ZvonokPostService.call("+79140808817"); // TODO Replace with xml|.conf
+            ZvonokPostService.call("+79145353244");
+        }
+
+        String msgText = boilerNames[boilerIndex] + "\n" + "Аварийное значение!" + " Общие параметры на момент аварии:" + "\n"
+                + "\uD83D\uDD25 Температура уходящей воды: " + boilersDataService.getBoilers().get(boilerIndex).getTPod() + " °C" + "\n"
+                + "⚖️\uD83D\uDCA8 Давление в системе отопления: " + boilersDataService.getBoilers().get(boilerIndex).getPPod() + " МПа" + "\n" + comment;
+
+        if (!disableAlertsBoilers[boilerIndex]) {
+            for (int i = 0; i < clientsId.size(); i++) {
                 SendMessage message1 = new SendMessage();
                 message1.setChatId(clientsId.get(i));      // чат id
                 message1.setText(msgText);
                 Message message = execute(message1);
-               // avaryMessageID[i] = message.getMessageId();
+                // avaryMessageID[i] = message.getMessageId();
                 Message message2 = execute(Messages.avaryKeyboard(String.valueOf(clientsId.get(i))));
                 Thread.sleep(100);
             }
@@ -577,7 +604,7 @@ public class TelegramService extends TelegramLongPollingBot {
             }
         }
 
-        //boilerLoggingService.logBoilerStatus(boilersDataService.getBoilers().get(boilerIndex),msgText);
+        // boilerLoggingService.logBoilerStatus(boilersDataService.getBoilers().get(boilerIndex), msgText);
     }
     public void sendAttentionGasEngine(int paramId, String comment) throws TelegramApiException, InterruptedException {
 
@@ -924,7 +951,7 @@ public class TelegramService extends TelegramLongPollingBot {
     }
     @Override
     public String getBotUsername() {
-        return "@BoilerControlAN_bot";
+        return "@BoilerControlAN2_bot";
     }
     @Override
     public String getBotToken() {
