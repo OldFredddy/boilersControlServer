@@ -51,7 +51,7 @@ public class HangCatcher {
         }
         engineTempArr = new ArrayList<>();
     }
-    long communicationTimeout = 3 * 60 * 1000;
+    long communicationTimeout = 5 * 60 * 1000;
     @Scheduled(initialDelay = 10000, fixedRate = 2000)
     public void compareAndNotify() throws TelegramApiException, InterruptedException {
         for (int i = 0; i < boilersDataService.getBoilers().size(); i++) {
@@ -66,7 +66,6 @@ public class HangCatcher {
                 Thread.sleep(500);
                 if (boiler.getIsOk() != 2){
                     boiler.setIsOk(2, boiler.getVersion() + 1);
-
                 }
                 continue;
             }
