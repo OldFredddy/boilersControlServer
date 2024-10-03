@@ -119,7 +119,7 @@ public class Messages {
         message.setReplyMarkup(inlineKeyboardMarkup);
         return message;
     }
-    public static InlineKeyboardMarkup controlKeyboardMarkup(boolean allowAlertForBoilers) {
+    public static InlineKeyboardMarkup controlKeyboardMarkup(boolean allowAlertForBoilers, String[] pumpsInfo,int boilerControlNum) {
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
         List<InlineKeyboardButton> buttonList2 = new ArrayList<>();
@@ -149,12 +149,26 @@ public class Messages {
         InlineKeyboardButton decreaseTAlarmButton = new InlineKeyboardButton();
         decreaseTAlarmButton.setText("-3°С (Alarm)");
         decreaseTAlarmButton.setCallbackData("decreaseTAlarm");
-        InlineKeyboardButton pumpOn = new InlineKeyboardButton();
-        pumpOn.setText("Насос ✅");
-        pumpOn.setCallbackData("pumpOn");
-        InlineKeyboardButton pumpOff = new InlineKeyboardButton();
-        pumpOff.setText("Насос ❌");
-        pumpOff.setCallbackData("pumpOff");
+
+        int pumpIndex1 = boilerControlNum * 2;
+        int pumpIndex2 = pumpIndex1 + 1;
+
+        String pump1Status = pumpsInfo[pumpIndex1];
+        String pump2Status = pumpsInfo[pumpIndex2];
+
+        String pump1Text = "Насос 1 " + (pump1Status.equals("1") ? "✅" : "❌");
+        String pump2Text = "Насос 2 " + (pump2Status.equals("1") ? "✅" : "❌");
+
+        InlineKeyboardButton pump1Button = new InlineKeyboardButton();
+        pump1Button.setText(pump1Text);
+        pump1Button.setCallbackData("togglePump1");
+
+        InlineKeyboardButton pump2Button = new InlineKeyboardButton();
+        pump2Button.setText(pump2Text);
+        pump2Button.setCallbackData("togglePump2");
+        List<InlineKeyboardButton> pumpButtons = new ArrayList<>();
+        pumpButtons.add(pump1Button);
+        pumpButtons.add(pump2Button);
         buttonList2.add(enableCallServiceButton);
         buttonList3.add(disableCallServiceButton);
         buttonList4.add(increaseTpodButton);
@@ -162,8 +176,7 @@ public class Messages {
         buttonList4.add(increaseTAlarmButton);
         buttonList4.add(decreaseTAlarmButton);
         buttonList5.add(showGraphics);
-        buttonList6.add(pumpOn);
-        buttonList7.add(pumpOff);
+
         List<InlineKeyboardButton> backButtonRow = new ArrayList<>();
         InlineKeyboardButton backButton = new InlineKeyboardButton();
         backButton.setText("↩️Назад");
@@ -174,8 +187,7 @@ public class Messages {
         rowList.add(buttonList3);
         rowList.add(buttonList4);
         rowList.add(buttonList5);
-        rowList.add(buttonList6);
-        rowList.add(buttonList7);
+        rowList.add(pumpButtons);
 
         if (allowAlertForBoilers){
             List<InlineKeyboardButton> disableAlertsButtonRow = new ArrayList<>();

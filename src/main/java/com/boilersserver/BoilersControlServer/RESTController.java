@@ -20,6 +20,8 @@ public class RESTController {
     private final PumpStationDataService pumpStationDataService;
     private final GasEngineDataService gasEngineDataService;
     @Autowired
+    private PumpInfoService pumpInfoService;
+    @Autowired
     public RESTController(TelegramService telegramService, BoilersDataService boilersDataService,
                           TemperatureCorrections temperatureCorrections, GudimDataService gudimDataService,
                           PumpStationDataService pumpStationDataService, GasEngineDataService gasEngineDataService) {
@@ -29,6 +31,16 @@ public class RESTController {
         this.temperatureCorrections = temperatureCorrections;
         this.pumpStationDataService = pumpStationDataService;
         this.gasEngineDataService = gasEngineDataService;
+    }
+    @CrossOrigin(origins = "*")
+    @GetMapping("/getPumpsInfo")
+    public ResponseEntity<String[]> getPumpsInfo() {
+        try {
+            String[] pumpsInfo = pumpInfoService.getPumpsInfo();
+            return ResponseEntity.ok(pumpsInfo);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
+        }
     }
     @CrossOrigin(origins = "*")
     @GetMapping("/getparams")
@@ -53,6 +65,7 @@ public class RESTController {
             return "Error: " + e.getMessage();
         }
     }
+
     @CrossOrigin(origins = "*")
     @PostMapping("/setAlarmCorrections")
     public String setAlarmCorrections(@RequestBody String[] temperatureCorrectionsArr) {

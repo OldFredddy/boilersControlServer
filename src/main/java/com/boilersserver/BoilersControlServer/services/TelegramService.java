@@ -40,6 +40,8 @@ import java.util.regex.Pattern;
 @Component
 public class TelegramService extends TelegramLongPollingBot {
     Graphics graphics;
+    @Autowired
+    private PumpInfoService pumpInfoService;
     static volatile boolean keepRunning = true;
     static volatile int boilerControlNum = -1;
     private final boolean[] secondAttempt={false,false,false,false,false,false,false,false,false,false,false,false,false,false};
@@ -552,7 +554,9 @@ public class TelegramService extends TelegramLongPollingBot {
     private static final long ALERT_INTERVAL_MS = 40_000;
     public void sendAttention(int boilerIndex, String comment) throws TelegramApiException, InterruptedException {
         long currentTime = System.currentTimeMillis();
-
+        if (disableAlertsBoilers[boilerIndex]) {
+            return;
+        }
         // Получаем AtomicLong для данного boilerIndex, если его нет — создаём
         AtomicLong lastAlertTimeAtomic = lastAlertTimestampsMap.computeIfAbsent(boilerIndex, k -> new AtomicLong(0));
 
@@ -785,7 +789,7 @@ public class TelegramService extends TelegramLongPollingBot {
             if (update.getCallbackQuery().getData().contains("boiler")){
                 try {
                     boilerControlNum=extractBoilerControlNum(update.getCallbackQuery().getData());
-                    InlineKeyboardMarkup controlMarkup = Messages.controlKeyboardMarkup(disableAlertsBoilers[boilerControlNum]);
+                    InlineKeyboardMarkup controlMarkup = Messages.controlKeyboardMarkup(disableAlertsBoilers[boilerControlNum], pumpInfoService.getPumpsInfo(), boilerControlNum);
                     EditMessageText newMessage = new EditMessageText(
                             String.valueOf(chatId),
                             (int) messageId,
@@ -869,9 +873,34 @@ public class TelegramService extends TelegramLongPollingBot {
                     throw new RuntimeException(e);
                 }
             }
+            if (callData.equals("togglePump1") || callData.equals("togglePump2")) {
+                int pumpIndex = (boilerControlNum * 2) + (callData.equals("togglePump1") ? 0 : 1);
+                // Get current pumpsInfo
+                String[] pumpsInfo = pumpInfoService.getPumpsInfo();
+                // Toggle the status
+                String currentStatus = pumpsInfo[pumpIndex];
+                String newStatus = currentStatus.equals("1") ? "0" : "1";
+                pumpsInfo[pumpIndex] = newStatus;
+                // Save back to Redis
+                pumpInfoService.setPumpsInfo(pumpsInfo);
+                // Update the keyboard
+                InlineKeyboardMarkup controlMarkup = Messages.controlKeyboardMarkup(disableAlertsBoilers[boilerControlNum], pumpsInfo, boilerControlNum);
+                // Send updated message
+                EditMessageText newMessage = new EditMessageText(
+                        String.valueOf(chatId),
+                        (int) messageId,
+                        null,
+                        boilerNames[boilerControlNum],
+                        null,
+                        null,
+                        controlMarkup,
+                        null
+                );
+                execute(newMessage);
+            }
             if (callData.equals("goBackToControl")){
                 try {
-                    InlineKeyboardMarkup controlMarkup = Messages.controlKeyboardMarkup(disableAlertsBoilers[boilerControlNum]);
+                    InlineKeyboardMarkup controlMarkup = Messages.controlKeyboardMarkup(disableAlertsBoilers[boilerControlNum], pumpInfoService.getPumpsInfo(), boilerControlNum);
                     EditMessageText newMessage = new EditMessageText(
                             String.valueOf(chatId),
                             (int) messageId,
@@ -913,7 +942,7 @@ public class TelegramService extends TelegramLongPollingBot {
                 }else {
                     disableAlertsBoilers[boilerControlNum]=false;
                 }
-                InlineKeyboardMarkup controlMarkup = Messages.controlKeyboardMarkup(disableAlertsBoilers[boilerControlNum]);
+                InlineKeyboardMarkup controlMarkup = Messages.controlKeyboardMarkup(disableAlertsBoilers[boilerControlNum], pumpInfoService.getPumpsInfo(), boilerControlNum);
                 EditMessageText newMessage = new EditMessageText(
                         String.valueOf(chatId),
                         (int) messageId,
