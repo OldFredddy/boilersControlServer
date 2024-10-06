@@ -42,6 +42,7 @@ public class RESTController {
             return ResponseEntity.status(500).body(null);
         }
     }
+
     @CrossOrigin(origins = "*")
     @GetMapping("/getparams")
     public ResponseEntity<String> getParams() {
@@ -140,6 +141,46 @@ public class RESTController {
             return "Success";
         } catch (Exception e) {
             return "Error: " + e.getMessage();
+        }
+    }
+    @CrossOrigin(origins = "*")
+    @GetMapping("/getPumpsInfo11")
+    public ResponseEntity<String> getPumpsInfo11() {
+        try {
+            String[] pumpsInfo = pumpInfoService.getPumpsInfo();
+            return ResponseEntity.ok((pumpsInfo[0]));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+    @CrossOrigin(origins = "*")
+    @GetMapping("/getPumpsInfo12")
+    public ResponseEntity<String> getPumpsInfo12() {
+        try {
+            String[] pumpsInfo = pumpInfoService.getPumpsInfo();
+            return ResponseEntity.ok((pumpsInfo[1]));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+    @CrossOrigin(origins = "*")
+    @GetMapping("/getPumpsInfo21")
+    public ResponseEntity<String> getPumpsInfo21() {
+        try {
+            String[] pumpsInfo = pumpInfoService.getPumpsInfo();
+            return ResponseEntity.ok((pumpsInfo[2]));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+    @CrossOrigin(origins = "*")
+    @GetMapping("/getPumpsInfo22")
+    public ResponseEntity<String> getPumpsInfo22() {
+        try {
+            String[] pumpsInfo = pumpInfoService.getPumpsInfo();
+            return ResponseEntity.ok((pumpsInfo[3]));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
         }
     }
 }
