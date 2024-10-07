@@ -183,4 +183,24 @@ public class RESTController {
             return ResponseEntity.status(500).body(null);
         }
     }
+    @CrossOrigin(origins = "*")
+    @GetMapping("/getPumpsInfo41")
+    public ResponseEntity<String> getPumpsInfo41() {
+        try {
+            String[] pumpsInfo = pumpInfoService.getPumpsInfo();
+            return ResponseEntity.ok((pumpsInfo[6]));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+    @CrossOrigin(origins = "*")
+    @GetMapping("/getPumpsInfo42")
+    public ResponseEntity<String> getPumpsInfo42() {
+        try {
+            String[] pumpsInfo = pumpInfoService.getPumpsInfo();
+            return ResponseEntity.ok((pumpsInfo[7]));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
+        }
+    }
 }

@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Messages {
-    public static InlineKeyboardMarkup chooseBoilerKeyboardMarkup() {
+    public static InlineKeyboardMarkup chooseBoilerKeyboardMarkup(boolean boolDisableAllAlerts) {
         // SendMessage message = new SendMessage();
         // message.setChatId(chatId);
         // message.setText("Выберите котельную:");
@@ -28,6 +28,7 @@ public class Messages {
         List<InlineKeyboardButton> buttonList11 = new ArrayList<>();
         List<InlineKeyboardButton> buttonList12 = new ArrayList<>();
         List<InlineKeyboardButton> buttonList13 = new ArrayList<>();
+        List<InlineKeyboardButton> buttonList14 = new ArrayList<>();
         InlineKeyboardButton boiler0 = new InlineKeyboardButton();  boiler0.setCallbackData("boiler0");
         InlineKeyboardButton boiler1 = new InlineKeyboardButton();  boiler1.setCallbackData("boiler1");
         InlineKeyboardButton boiler2 = new InlineKeyboardButton();  boiler2.setCallbackData("boiler2");
@@ -42,6 +43,7 @@ public class Messages {
         InlineKeyboardButton boiler11 = new InlineKeyboardButton();  boiler11.setCallbackData("boiler11");
         InlineKeyboardButton boiler12 = new InlineKeyboardButton();  boiler12.setCallbackData("boiler12");
         InlineKeyboardButton boiler13 = new InlineKeyboardButton();  boiler13.setCallbackData("boiler13");
+        InlineKeyboardButton disableAllAlerts = new InlineKeyboardButton();  disableAllAlerts.setCallbackData("disableAllAlerts");
         boiler0.setText("👨‍🦰 Котельная «Склады Мищенко»");
         boiler1.setText("👨‍🦳 Котельная «Выставка Ендальцева»");
         boiler2.setText("🏢 Котельная «ЧукотОптТорг»");
@@ -56,10 +58,16 @@ public class Messages {
         boiler11.setText("🏛️ Котельная «Департамент»");
         boiler12.setText("\uD83C\uDFE2 Котельная «Офис ЧСБК квартиры»");
         boiler13.setText("\uD83C\uDF30 Котельная Шишкина");
+        if (!boolDisableAllAlerts) {
+            disableAllAlerts.setText("\uD83D\uDCF5 Отключить все уведомления");
+        } else {
+            disableAllAlerts.setText("\uD83D\uDE80Включить уведомления");
+        }
+
         buttonList0.add(boiler0); buttonList1.add(boiler1); buttonList2.add(boiler2); buttonList3.add(boiler3);
         buttonList4.add(boiler4); buttonList5.add(boiler5); buttonList6.add(boiler6);
         buttonList7.add(boiler7); buttonList8.add(boiler8); buttonList9.add(boiler9); buttonList10.add(boiler10); buttonList11.add(boiler11);
-        buttonList12.add(boiler12); buttonList13.add(boiler13);
+        buttonList12.add(boiler12); buttonList13.add(boiler13);buttonList14.add(disableAllAlerts);
         rowList.add(buttonList0);
         rowList.add(buttonList1);
         rowList.add(buttonList2);
@@ -74,6 +82,7 @@ public class Messages {
         rowList.add(buttonList11);
         rowList.add(buttonList12);
         rowList.add(buttonList13);
+        rowList.add(buttonList14);
         inlineKeyboardMarkup.setKeyboard(rowList);
      //   message.setReplyMarkup(inlineKeyboardMarkup);
         return inlineKeyboardMarkup;

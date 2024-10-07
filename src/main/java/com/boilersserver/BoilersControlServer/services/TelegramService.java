@@ -74,16 +74,17 @@ public class TelegramService extends TelegramLongPollingBot {
     static volatile Integer messageId = -1;
     List<Long> clientsId = new ArrayList<>();
     List<Long> clientsIdGasEngine = new ArrayList<>();
-    Long chiefOfWasteWaterStation = 7084589354L;
+    Long chiefOfWasteWaterStation = 1102774002L;
     public boolean checkForAvary =true;
     public boolean disableAlertsGasStation =false;
+    public boolean disableAllAlertsButton =false;
     private static final String TEMPERATURE_PROBLEM_MESSAGE = "Проблема в температуре подачи!";
     private static final String PRESSURE_PROBLEM_LOW_MESSAGE = "Проблема в давлении! Ниже допустимого!";
     private static final String PRESSURE_PROBLEM_HIGH_MESSAGE = "Проблема в давлении! Превышение!";
     private static final String INVALID_VALUE = "-1000";
     private static final long SLEEP_TIME = 2000L;
     private static final long LONG_SLEEP_TIME = 2800L;
-    private static final long LONG_LONG_SLEEP_TIME = 6000L;
+    private static final long LONG_LONG_SLEEP_TIME = 7000L;
     private static final long SHORT_SLEEP_TIME = 2800L;
     private static final long SUPER_SHORT_SLEEP_TIME = 800L;
     private volatile BoilersDataService boilersDataService;
@@ -128,7 +129,7 @@ public class TelegramService extends TelegramLongPollingBot {
      //  clientsId.add(6588122746L);
      //  clientsId.add(1589552937L);
        clientsIdGasEngine.add(1102774002L);
-       clientsIdGasEngine.add(chiefOfWasteWaterStation);
+        //clientsIdGasEngine.add(chiefOfWasteWaterStation);
        //clientsId.add(5164539595L);
         for (int i = 0; i < flagSilentReset.length; i++) {
             flagSilentReset[i] = new AtomicBoolean(false);
@@ -341,6 +342,7 @@ public class TelegramService extends TelegramLongPollingBot {
             execute(editMessage);
         } catch (TelegramApiException e) {
             try {
+                e.printStackTrace();
                 Thread.sleep(500);
             } catch (InterruptedException ex) {
                 throw new RuntimeException(ex);
@@ -695,6 +697,7 @@ public class TelegramService extends TelegramLongPollingBot {
                 execute(message);
                 Thread.sleep(LONG_SLEEP_TIME);
             }
+
             if (update.getCallbackQuery().getData().equals("enableCallService")){
                     for (int i = 0; i < clientsId.size(); i++) {
                         SendMessage message = new SendMessage(update.getCallbackQuery().getMessage().getChatId().toString(), "Звонки включены!");
@@ -767,7 +770,7 @@ public class TelegramService extends TelegramLongPollingBot {
             if (callData.equals("bControl")) {
                 long senderId = update.getCallbackQuery().getFrom().getId();
                 if (clientsId.contains(senderId)){
-                    InlineKeyboardMarkup markupInline = Messages.chooseBoilerKeyboardMarkup();
+                    InlineKeyboardMarkup markupInline = Messages.chooseBoilerKeyboardMarkup(disableAllAlertsButton);
                     EditMessageText newMessage = new EditMessageText(
                             String.valueOf(chatId),
                             (int) messageId,
@@ -918,7 +921,30 @@ public class TelegramService extends TelegramLongPollingBot {
                 enableCallService=false;
             }
             if (callData.equals("goBack")) {
-                InlineKeyboardMarkup markupInline = Messages.chooseBoilerKeyboardMarkup();
+                InlineKeyboardMarkup markupInline = Messages.chooseBoilerKeyboardMarkup(disableAllAlertsButton);
+
+                EditMessageText newMessage = new EditMessageText(
+                        String.valueOf(chatId),
+                        (int) messageId,
+                        null,
+                        "Выберите котельную",
+                        null,
+                        null,
+                        markupInline,
+                        null
+                );
+                try {
+                    execute(newMessage);
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (callData.equals("disableAllAlerts")) {
+                disableAllAlertsButton=!disableAllAlertsButton;
+                for (int i = 0; i < boilerNames.length; i++) {
+                    disableAlertsBoilers[i]=disableAllAlertsButton;
+                }
+                InlineKeyboardMarkup markupInline = Messages.chooseBoilerKeyboardMarkup(disableAllAlertsButton);
 
                 EditMessageText newMessage = new EditMessageText(
                         String.valueOf(chatId),
