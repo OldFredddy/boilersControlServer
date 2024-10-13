@@ -34,7 +34,7 @@ public class HangCatcher {
     private final ArrayList<ArrayList<String>> tStreetArr = new ArrayList<>();
     private ArrayList<String> engineTempArr = new ArrayList<>();
     private final RedisTemplate<String, String> redisTemplate;
-    long thresholdTime = TimeUnit.MINUTES.toMillis(5);
+    long thresholdTime = TimeUnit.MINUTES.toMillis(6);
 
     @Autowired
     public HangCatcher(TelegramService telegramService, BoilersDataService boilersDataService,
