@@ -118,7 +118,7 @@ public class HangCatcher {
     }
     @Scheduled(fixedRate = 20000)
     private void cleanupOldEntries() {
-        long cutoff = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(8);
+        long cutoff = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(100);
         for (int i = 0; i < 14; i++) {
             String boilerHistoryKey = "history:boiler:" + i;
             redisTemplate.opsForZSet().removeRangeByScore(boilerHistoryKey, 0, cutoff);
