@@ -2,7 +2,7 @@ package com.boilersserver.BoilersControlServer.services;
 
 
 import com.boilersserver.BoilersControlServer.entities.*;
-import com.boilersserver.BoilersControlServer.utils.Graphics;
+import com.boilersserver.BoilersControlServer.utils.Graph;
 import com.boilersserver.BoilersControlServer.utils.TemperatureMonitor;
 import com.boilersserver.BoilersControlServer.utils.ZvonokPostService;
 import jakarta.annotation.PostConstruct;
@@ -39,7 +39,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 @Component
 public class TelegramService extends TelegramLongPollingBot {
-    Graphics graphics;
+    Graph graphics;
     @Autowired
     private PumpInfoService pumpInfoService;
     static volatile boolean keepRunning = true;
@@ -63,7 +63,7 @@ public class TelegramService extends TelegramLongPollingBot {
     };
     private volatile boolean enableCallService=false;
     public float[] normalPvxHigh={0.5f, 0.5f, 0.5f, 0.5f, 0.35f, 0.35f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f,0.5f, 0.53f};
-    public float[] normalPvxLow= {0.3f, 0.3f, 0.3f, 0.3f, 0.12f, 0.3f, 0.02f, 0.32f, 0.30f, 0.32f, 0.32f, 0.32f, 0.02f, 0.22f};
+    public float[] normalPvxLow= {0.3f, 0.3f, 0.3f, 0.3f, 0.12f, 0.3f, 0.05f, 0.32f, 0.30f, 0.32f, 0.32f, 0.32f, 0.05f, 0.22f};
     private Timer timer = new Timer();
     private Timer timerSilintReset = new Timer();
     public boolean [] errorsArray = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};
@@ -91,20 +91,18 @@ public class TelegramService extends TelegramLongPollingBot {
     private volatile GudimDataService gudimDataService;
     private volatile PumpStationDataService pumpStationDataService;
     private volatile GasEngineDataService gasEngineDataService;
-    private volatile BoilerLoggingService boilerLoggingService;
     private TemperatureMonitor temperatureMonitor = new TemperatureMonitor();
     Tokens tokens;
     double currentPpodHigh;
     double currentPpodLow;
 
     @Autowired
-    public TelegramService(BoilersDataService boilersDataService, Tokens tokens, Graphics graphics,
-                           BoilerLoggingService boilerLoggingService, GudimDataService gudimDataService,
+    public TelegramService(BoilersDataService boilersDataService, Tokens tokens, Graph graphics,
+                          GudimDataService gudimDataService,
                            PumpStationDataService pumpStationDataService, GasEngineDataService gasEngineDataService)  {
         this.boilersDataService = boilersDataService;
         this.tokens = tokens;
         this.graphics=graphics;
-        this.boilerLoggingService = boilerLoggingService;
         this.gudimDataService = gudimDataService;
         this.pumpStationDataService = pumpStationDataService;
         this.gasEngineDataService = gasEngineDataService;
