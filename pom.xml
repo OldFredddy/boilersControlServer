@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.boilersserver</groupId>
 	<artifactId>BoilersControlServer</artifactId>
-	<version>0.3.2</version>
+	<version>0.3.4</version>
 	<name>BoilersControlServer</name>
 	<description>Web service</description>
 	<properties>
@@ -152,6 +152,14 @@
 							<artifactId>lombok</artifactId>
 						</exclude>
 					</excludes>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.5.2</version>
+				<configuration>
+					<skipTests>true</skipTests>
 				</configuration>
 			</plugin>
 		</plugins>

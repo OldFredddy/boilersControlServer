@@ -358,9 +358,7 @@ public class TelegramService extends TelegramLongPollingBot {
            pVx[i]=boilersDataService.getBoilers().get(i).getPPod();
            tStreet[i]=boilersDataService.getBoilers().get(i).getTUlica();
         }
-        tPod[2]="*";
-        pVx[2]="*";
-        tStreet[2]="*";
+
         String[][] data = {
                 tPod,
                 pVx,

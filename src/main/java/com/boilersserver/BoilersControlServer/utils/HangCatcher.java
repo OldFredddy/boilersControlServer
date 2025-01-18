@@ -64,9 +64,7 @@ public class HangCatcher {
             if ((currentTime - lastUpdatedTime) > communicationTimeout) {
                 telegramService.sendAttention(i, "Нет связи с котельной " + telegramService.boilerNames[i]);
                 Thread.sleep(500);
-                if (boiler.getIsOk() != 2){
-                    boiler.setIsOk(2, boiler.getVersion() + 1);
-                }
+
                 continue;
             }
             String boilerKey = "boiler:" + boiler.getId();
