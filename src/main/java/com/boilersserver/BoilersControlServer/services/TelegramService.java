@@ -48,7 +48,7 @@ public class TelegramService extends TelegramLongPollingBot {
     public String[] boilerNames = {
             "Котельная «Склады Мищенко»",                   //0   кот№1 Склады Мищенко
             "Котельная «Выставка Ендальцева»",              //1   кот№2 Ендальцев         (датчик на базе)
-            "Котельная «ЧукотОптТорг»",                     //2   кот№3 ЧукотОптТорг      (датчик на базе)
+            "Котельная «Каток»",                     //2   кот№3 ЧукотОптТорг      (датчик на базе)
             "Котельная «ЧСБК новая»",                       //3   кот№4 "ЧСБК Новая"
             "Котельная «Офис СВТ»",                         //4   кот№5 офис "СВТ"
             "Котельная «Общежитие на Южной»",               //5   кот№6 общежитие на Южной
@@ -62,8 +62,8 @@ public class TelegramService extends TelegramLongPollingBot {
             "Котельная Шишкина"                             //13  кот№14 ТО Шишкина
     };
     private volatile boolean enableCallService=false;
-    public float[] normalPvxHigh={0.5f, 0.5f, 0.5f, 0.5f, 0.35f, 0.35f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f,0.5f, 0.53f};
-    public float[] normalPvxLow= {0.3f, 0.3f, 0.3f, 0.3f, 0.12f, 0.3f, 0.05f, 0.32f, 0.30f, 0.32f, 0.32f, 0.32f, 0.05f, 0.22f};
+    public float[] normalPvxHigh={0.5f, 0.5f, 0.4f, 0.5f, 0.35f, 0.35f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f,0.5f, 0.53f};
+    public float[] normalPvxLow= {0.3f, 0.3f, 0.1f, 0.3f, 0.12f, 0.3f, 0.05f, 0.32f, 0.30f, 0.32f, 0.32f, 0.32f, 0.05f, 0.22f};
     private Timer timer = new Timer();
     private Timer timerSilintReset = new Timer();
     public boolean [] errorsArray = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};

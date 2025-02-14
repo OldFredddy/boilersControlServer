@@ -51,7 +51,7 @@ public class HangCatcher {
         }
         engineTempArr = new ArrayList<>();
     }
-    long communicationTimeout = 5 * 60 * 1000;
+    long communicationTimeout = 10 * 60 * 1000;
     @Scheduled(initialDelay = 10000, fixedRate = 2000)
     public void compareAndNotify() throws TelegramApiException, InterruptedException {
         for (int i = 0; i < boilersDataService.getBoilers().size(); i++) {
@@ -62,6 +62,11 @@ public class HangCatcher {
             long lastUpdatedTime = boiler.getLastUpdated();
             long lastValueChangedTime = boiler.getLastValueChangedTime();
             if ((currentTime - lastUpdatedTime) > communicationTimeout) {
+              if (i==2){
+                  Thread.sleep(500);
+
+                  continue;
+              }
                 telegramService.sendAttention(i, "Нет связи с котельной " + telegramService.boilerNames[i]);
                 Thread.sleep(500);
 
@@ -88,8 +93,13 @@ public class HangCatcher {
             updateList(tStreetArr.get(i), tStreet);
             if (areAllElementsEqual(tPodArr.get(i), lastValueChangedTime, thresholdTime) &&
                     areAllElementsEqual(tStreetArr.get(i), lastValueChangedTime, thresholdTime)) {
-                telegramService.sendAttention(i, "Значения от котельной " + telegramService.boilerNames[i] + " не меняются");
-                Thread.sleep(1000);
+
+                if (i!=2){
+                    Thread.sleep(500);
+                    telegramService.sendAttention(i, "Значения от котельной " + telegramService.boilerNames[i] + " не меняются");
+                    Thread.sleep(1000);
+                    continue;
+                }
                 // if (boiler.getIsOk() != 2){
                     //     boiler.setIsOk(2, boiler.getVersion() + 1);
                     //
