@@ -62,8 +62,8 @@ public class TelegramService extends TelegramLongPollingBot {
             "Котельная Шишкина"                             //13  кот№14 ТО Шишкина
     };
     private volatile boolean enableCallService=false;
-    public float[] normalPvxHigh={0.5f, 0.5f, 0.4f, 0.5f, 0.35f, 0.35f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f,0.5f, 0.53f};
-    public float[] normalPvxLow= {0.3f, 0.3f, 0.1f, 0.3f, 0.12f, 0.3f, 0.05f, 0.32f, 0.30f, 0.32f, 0.32f, 0.32f, 0.05f, 0.22f};
+    public float[] normalPvxHigh={0.5f, 0.5f, 0.43f, 0.5f, 0.35f, 0.35f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f,0.5f, 0.53f};
+    public float[] normalPvxLow= {0.3f, 0.3f, 0.2f, 0.3f, 0.12f, 0.3f, 0.05f, 0.32f, 0.30f, 0.32f, 0.32f, 0.32f, 0.05f, 0.22f};
     private Timer timer = new Timer();
     private Timer timerSilintReset = new Timer();
     public boolean [] errorsArray = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};

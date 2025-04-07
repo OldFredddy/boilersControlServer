@@ -222,7 +222,7 @@ public class BoilersDataService {
                 .bodyToMono(String.class)
                 .map(JsonMapper::mapJsonToCorrections);
     }
-    public Mono<String[]> setTAlarmToClient(String[] correctionsTAlarm) {// Метод для отправки корректировок tAlarm TODO тут проверить и дописать, тут быть повнимательнее
+    public Mono<String[]> setTAlarmToClient(String[] correctionsTAlarm) {// TODO тут проверить и дописать
         Gson gson = new Gson();
         String json = gson.toJson(correctionsTAlarm);
         return webClient.post()
