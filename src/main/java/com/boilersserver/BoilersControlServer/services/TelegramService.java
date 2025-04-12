@@ -537,7 +537,11 @@ public class TelegramService extends TelegramLongPollingBot {
             }
             result.append(String.format(format, row));
         }
+        result.append("Газомоторная станция - Рынок \n");
+        result.append("Температура выхлопных газов: "+ gasEngineStation.getExhaustGasTemperatureBoiler7()+ " "
+                + getStatusEmoji(gasEngineStation.getIsOkFromBoiler7()));
         result.append("```\n");
+
         return result.toString();
     }
     private String getStatusEmoji(int status) {

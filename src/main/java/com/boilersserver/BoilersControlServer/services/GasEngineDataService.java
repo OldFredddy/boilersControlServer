@@ -26,6 +26,7 @@ public class GasEngineDataService {
         gasEngineStation1.setNormalEngineTemp("5");
         gasEngineStation1.setNormalRadiatorTemp("5");
         gasEngineStation1.setNormalGeneratorTemp("5");
+        gasEngineStation1.setExhaustGasTemperatureBoiler7("5");
         gasEngineStation = gasEngineStation1;
     }
     @PreDestroy
