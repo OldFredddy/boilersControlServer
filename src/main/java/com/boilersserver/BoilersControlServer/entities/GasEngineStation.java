@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class GasEngineStation {
     private int isOk;  // 0-waiting, 1 - good, 2 - error
-    private int isOkFromBoiler7;  // 0-waiting, 1 - good, 2 - error
+    @Setter private int isOkFromBoiler7;  // 0-waiting, 1 - good, 2 - error
     @Setter private String engineTemp;
     @Setter private String roomTemp;
     @Setter private String generatorTemp;

@@ -1,11 +1,13 @@
 package com.boilersserver.BoilersControlServer.services;
 
+import com.boilersserver.BoilersControlServer.entities.GasEngineStation;
 import com.boilersserver.BoilersControlServer.utils.JsonMapper;
 import com.boilersserver.BoilersControlServer.entities.Boiler;
 import com.boilersserver.BoilersControlServer.entities.TemperatureCorrections;
 import com.google.gson.Gson;
 import jakarta.annotation.PreDestroy;
 import lombok.Getter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,8 @@ public class BoilersDataService {
     @Getter
     private TemperatureCorrections corrections = new TemperatureCorrections();
     private final int BOILERS_COUNT = 14;
+    @Autowired
+    private volatile GasEngineDataService gasEngineDataService;
     private final WebClient webClient;
     private final HttpClient httpClient;
     private final ConnectionProvider connectionProvider;
@@ -151,6 +155,7 @@ public class BoilersDataService {
             }
             forFirstStart=false;
         }
+        gasEngineDataService.getGasEngineStation().setExhaustGasTemperatureBoiler7(this.boilers.get(6).getPPod()); // TODO ТЕСТЫ ПРОВЕРЬ
         isUpdateInProgress.set(false);
     }
     public void fetchBoilerData(List<Boiler> boilers) {

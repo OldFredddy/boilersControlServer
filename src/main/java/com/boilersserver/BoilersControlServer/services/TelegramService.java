@@ -43,12 +43,13 @@ public class TelegramService extends TelegramLongPollingBot {
     @Autowired
     private PumpInfoService pumpInfoService;
     static volatile boolean keepRunning = true;
+    public  static final int CONTROL_GAS_TEMPERATURE = 80;  //TODO скорректировать
     static volatile int boilerControlNum = -1;
     private final boolean[] secondAttempt={false,false,false,false,false,false,false,false,false,false,false,false,false,false};
     public String[] boilerNames = {
             "Котельная «Склады Мищенко»",                   //0   кот№1 Склады Мищенко
             "Котельная «Выставка Ендальцева»",              //1   кот№2 Ендальцев         (датчик на базе)
-            "Котельная «Каток»",                     //2   кот№3 ЧукотОптТорг      (датчик на базе)
+            "Котельная «Каток»",                            //2   кот№3 Каток
             "Котельная «ЧСБК новая»",                       //3   кот№4 "ЧСБК Новая"
             "Котельная «Офис СВТ»",                         //4   кот№5 офис "СВТ"
             "Котельная «Общежитие на Южной»",               //5   кот№6 общежитие на Южной
@@ -70,6 +71,7 @@ public class TelegramService extends TelegramLongPollingBot {
     public boolean [] disableAlertsBoilers = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};
     public boolean [] pressureErrorsArray = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};
     public boolean [] gasEngineErrorsArray = {false, false, false, false};
+    public boolean gasEngineBoiler7 = false;
     public boolean [] temperatureErrorsArray = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};
     static volatile Integer messageId = -1;
     List<Long> clientsId = new ArrayList<>();
@@ -217,7 +219,7 @@ public class TelegramService extends TelegramLongPollingBot {
                        if (!temperatureErrorsArray[i]) {
                            if ((temperatureMonitor.isTemperatureAnomaly(boiler.getId(),
                                    boilersDataService.getCorrectionTpodAtIndex(i),
-                                  boiler))) { //TODO ОШИПКА
+                                  boiler))) {
                                if (!flagSilentReset[i].get()) {
                                    sendAttention(i, "Проблема в температуре подачи!\n" + "Верхний предел: " + temperatureMonitor.getHighLimit() + " °C" +
                                            "\nНижний предел: " + temperatureMonitor.getLowLimit() + " °C");
@@ -231,7 +233,9 @@ public class TelegramService extends TelegramLongPollingBot {
                            }
                        }
                 }
-
+                if (Integer.parseInt(gasEngineDataService.getGasEngineStation().getExhaustGasTemperatureBoiler7())<CONTROL_GAS_TEMPERATURE) {
+                    sendAttention(7,"gasStationBoiler7");
+                }
                 System.gc();
             } catch (RuntimeException e) {
                 e.printStackTrace();
@@ -569,7 +573,7 @@ public class TelegramService extends TelegramLongPollingBot {
             return;
         }
 
-        // Попытка обновить время последней отправки атомарно
+        // Попытка обновить время последней отправки
         boolean updated = lastAlertTimeAtomic.compareAndSet(lastAlertTime, currentTime);
         if (!updated) {
             // Если обновление не удалось (другое уведомление уже обновило время), пропускаем отправку
@@ -589,7 +593,12 @@ public class TelegramService extends TelegramLongPollingBot {
         String msgText = boilerNames[boilerIndex] + "\n" + "Аварийное значение!" + " Общие параметры на момент аварии:" + "\n"
                 + "\uD83D\uDD25 Температура уходящей воды: " + boilersDataService.getBoilers().get(boilerIndex).getTPod() + " °C" + "\n"
                 + "⚖️\uD83D\uDCA8 Давление в системе отопления: " + boilersDataService.getBoilers().get(boilerIndex).getPPod() + " МПа" + "\n" + comment;
-
+        if (comment.equals("gasStationBoiler7")) {
+            msgText = "Газомоторная станция рынок" + "\n" + "Аварийное значение!" + " Общие параметры на момент аварии:" + "\n"
+                    + "\uD83D\uDD25 Температура выхлопных газов: " + gasEngineDataService.getGasEngineStation().getExhaustGasTemperatureBoiler7()
+                    + "\n" + comment;
+            gasEngineDataService.getGasEngineStation().setIsOkFromBoiler7(2);
+        }
         if (!disableAlertsBoilers[boilerIndex]) {
             for (int i = 0; i < clientsId.size(); i++) {
                 SendMessage message1 = new SendMessage();
@@ -612,6 +621,7 @@ public class TelegramService extends TelegramLongPollingBot {
 
         // boilerLoggingService.logBoilerStatus(boilersDataService.getBoilers().get(boilerIndex), msgText);
     }
+
     public void sendAttentionGasEngine(int paramId, String comment) throws TelegramApiException, InterruptedException {
 
         gasEngineDataService.getGasEngineStation().setIsOk(2,gasEngineDataService.getGasEngineStation().getVersion()+1);  //0-waiting 1 - good 2 - error
@@ -967,6 +977,7 @@ public class TelegramService extends TelegramLongPollingBot {
                     disableAlertsBoilers[boilerControlNum]=true;
                 }else {
                     disableAlertsBoilers[boilerControlNum]=false;
+                    gasEngineDataService.getGasEngineStation().setIsOkFromBoiler7(1);
                 }
                 InlineKeyboardMarkup controlMarkup = Messages.controlKeyboardMarkup(disableAlertsBoilers[boilerControlNum], pumpInfoService.getPumpsInfo(), boilerControlNum);
                 EditMessageText newMessage = new EditMessageText(
