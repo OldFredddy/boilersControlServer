@@ -155,7 +155,7 @@ public class BoilersDataService {
             }
             forFirstStart=false;
         }
-        gasEngineDataService.getGasEngineStation().setExhaustGasTemperatureBoiler7(this.boilers.get(6).getPPod()); // TODO ТЕСТЫ ПРОВЕРЬ
+        gasEngineDataService.getGasEngineStation().setExhaustGasTemperatureBoiler7(this.boilers.get(5).getPPod()); // TODO ТЕСТЫ ПРОВЕРЬ
         isUpdateInProgress.set(false);
     }
     public void fetchBoilerData(List<Boiler> boilers) {

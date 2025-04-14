@@ -257,7 +257,7 @@ public class TelegramService extends TelegramLongPollingBot {
                     if (pressureErrorsArray[i]){
                         continue;
                     }
-                    if (i==5){
+                    if (i == 5){
                         continue;
                     }
                     if (boilersDataService.getBoilers().get(i).getPPodLowFixed().equals("-1.0")||boilersDataService.getBoilers().get(i).getPPodHighFixed().equals("-1.0")){
